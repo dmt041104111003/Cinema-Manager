@@ -50,7 +50,7 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     // Glide (Xử lý ảnh)
     implementation(libs.glide)
-
+    implementation ("com.wefika:flowlayout:0.4.1")
     // UI Components
     implementation(libs.material.dialogs)
     implementation(libs.circleimageview)
