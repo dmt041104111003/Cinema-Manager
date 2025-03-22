@@ -9,7 +9,7 @@
     <ImageView
         android:layout_width="@dimen/define_dimen_50"
         android:layout_height="@dimen/define_dimen_50"
-        android:src="@drawable/ic_avatar_default" />
+        android:src="@drawable/img" />
 
     <TextView
         android:id="@+id/tv_email"

@@ -1,6 +1,6 @@
 <resources>
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <style  name="Theme.CinemaManager" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="colorPrimaryDark">#07112a</item>
 
         <item name="drawerArrowStyle">@style/DrawerIcon</item>
