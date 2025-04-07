@@ -6,9 +6,9 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.cinema.databinding.ItemMovieBinding;
-import com.example.cinema.model.Movie;
-import com.example.cinema.util.GlideUtils;
+import com.example.cinemamanager.databinding.ItemMovieBinding;
+import com.example.cinemamanager.model.Movie;
+import com.example.cinemamanager.util.GlideUtils;
 
 import java.util.List;
 
