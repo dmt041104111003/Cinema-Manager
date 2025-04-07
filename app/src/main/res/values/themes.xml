@@ -17,7 +17,6 @@
             <enum name="Height" value="1" />
         </attr>
         <attr name="aspectRatio" format="float" />
-
         <attr name="cornerRadius" format="dimension" />
         <attr name="roundedCorners">
             <flag name="topLeft" value="1" />
