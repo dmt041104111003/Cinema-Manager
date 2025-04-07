@@ -281,6 +281,234 @@ public class ConfirmBookingActivity extends AppCompatActivity {
         }
         return timeFirebase;
     }
+    private Seat getSeatFirebaseFromId(int roomId, int timeId, int seatId) {
+        RoomFirebase roomFirebase = getRoomFirebaseFromId(roomId);
+        TimeFirebase timeFirebase = getTimeFirebaseFromId(roomFirebase, timeId);
+
+        Seat seatResult = new Seat();
+        if (timeFirebase.getSeats() != null) {
+            for (Seat seat : timeFirebase.getSeats()) {
+                if (seat.getId() == seatId) {
+                    seatResult = seat;
+                    break;
+                }
+            }
+        }
+        return seatResult;
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    private void onClickItemSeat(SeatLocal seat) {
+        if (seat.isSelected()) {
+            return;
+        }
+        seat.setChecked(!seat.isChecked());
+        mSeatAdapter.notifyDataSetChanged();
+    }
+
+    private void initListFoodAndDrink() {
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        mActivityConfirmBookingBinding.rcvFoodDrink.setLayoutManager(linearLayoutManager);
+        DividerItemDecoration decoration = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
+        mActivityConfirmBookingBinding.rcvFoodDrink.addItemDecoration(decoration);
+
+        getListFoodAndDrink();
+    }
+
+    public void getListFoodAndDrink() {
+        MyApplication.get(this).getFoodDatabaseReference().addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (mListFood != null) {
+                    mListFood.clear();
+                } else {
+                    mListFood = new ArrayList<>();
+                }
+                for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+                    Food food = dataSnapshot.getValue(Food.class);
+                    if (food != null && food.getQuantity() > 0) {
+                        mListFood.add(0, food);
+                    }
+                }
+                mFoodDrinkAdapter = new FoodDrinkAdapter(mListFood, (food, count) -> selectedCountFoodAndDrink(food, count));
+                mActivityConfirmBookingBinding.rcvFoodDrink.setAdapter(mFoodDrinkAdapter);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+            }
+        });
+    }
+
+    private void selectedCountFoodAndDrink(Food food, int count) {
+        if (mListFood == null || mListFood.isEmpty()) {
+            return;
+        }
+        for (Food foodEntity : mListFood) {
+            if (foodEntity.getId() == food.getId()) {
+                foodEntity.setCount(count);
+                break;
+            }
+        }
+    }
+
+    private void initSpinnerCategory() {
+        List<PaymentMethod> list = new ArrayList<>();
+        list.add(new PaymentMethod(ConstantKey.PAYMENT_CASH, ConstantKey.PAYMENT_CASH_TITLE));
+        list.add(new PaymentMethod(ConstantKey.PAYMENT_PAYPAL, ConstantKey.PAYMENT_PAYPAL_TITLE));
+
+        SelectPaymentAdapter selectPaymentAdapter = new SelectPaymentAdapter(this,
+                R.layout.item_choose_option, list);
+        mActivityConfirmBookingBinding.spnPayment.setAdapter(selectPaymentAdapter);
+        mActivityConfirmBookingBinding.spnPayment.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                mPaymentMethodSelected = selectPaymentAdapter.getItem(position);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+    }
+
+    private void onClickBookingMovie() {
+        if (mMovie == null) {
+            return;
+        }
+        if (StringUtil.isEmpty(getTitleRoomSelected())) {
+            Toast.makeText(this, getString(R.string.msg_select_room_require), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (StringUtil.isEmpty(getTitleTimeSelected())) {
+            Toast.makeText(this, getString(R.string.msg_select_time_require), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        int countSeat = getListSeatChecked().size();
+        if (countSeat <= 0) {
+            Toast.makeText(this, getString(R.string.msg_count_seat), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        setListSeatUpdate();
+
+        showDialogConfirmBooking();
+    }
+
+    private void setListSeatUpdate() {
+        for (SeatLocal seatChecked : getListSeatChecked()) {
+            getSeatFirebaseFromId(seatChecked.getRoomId(),
+                    seatChecked.getTimeId(), seatChecked.getId()).setSelected(true);
+        }
+    }
+
+    private void showDialogConfirmBooking() {
+        mDialog = new Dialog(this);
+        mDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        mDialog.setContentView(R.layout.layout_dialog_confirm_booking);
+        Window window = mDialog.getWindow();
+        window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
+        window.setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+        mDialog.setCancelable(false);
+
+        // Get view
+        final TextView tvNameMovie = mDialog.findViewById(R.id.tv_name_movie);
+        final TextView tvDateMovie = mDialog.findViewById(R.id.tv_date_movie);
+        final TextView tvRoomMovie = mDialog.findViewById(R.id.tv_room_movie);
+        final TextView tvTimeMovie = mDialog.findViewById(R.id.tv_time_movie);
+        final TextView tvCountBooking = mDialog.findViewById(R.id.tv_count_booking);
+        final TextView tvCountSeat = mDialog.findViewById(R.id.tv_count_seat);
+        final TextView tvFoodDrink = mDialog.findViewById(R.id.tv_food_drink);
+        final TextView tvPaymentMethod = mDialog.findViewById(R.id.tv_payment_method);
+        final TextView tvTotalAmount = mDialog.findViewById(R.id.tv_total_amount);
+
+        final TextView tvDialogCancel = mDialog.findViewById(R.id.tv_dialog_cancel);
+        final TextView tvDialogOk = mDialog.findViewById(R.id.tv_dialog_ok);
+
+        // Set data
+        int countView = getListSeatChecked().size();
+        mListFoodNeedUpdate = new ArrayList<>(getListFoodSelected());
+
+        tvNameMovie.setText(mMovie.getName());
+        tvDateMovie.setText(mMovie.getDate());
+        tvRoomMovie.setText(getTitleRoomSelected());
+        tvTimeMovie.setText(getTitleTimeSelected());
+        tvCountBooking.setText(String.valueOf(countView));
+        tvCountSeat.setText(getStringSeatChecked());
+        tvFoodDrink.setText(getStringFoodAndDrink());
+        tvPaymentMethod.setText(mPaymentMethodSelected.getName());
+        String strTotalAmount = getTotalAmount() + ConstantKey.UNIT_CURRENCY;
+        tvTotalAmount.setText(strTotalAmount);
+
+        // Set listener
+        tvDialogCancel.setOnClickListener(new IOnSingleClickListener() {
+            @Override
+            public void onSingleClick(View v) {
+                mDialog.dismiss();
+            }
+        });
+
+        tvDialogOk.setOnClickListener(new IOnSingleClickListener() {
+            @Override
+            public void onSingleClick(View v) {
+                long id = System.currentTimeMillis();
+                mBookingHistory = new BookingHistory(id, mMovie.getId(), mMovie.getName(),
+                        mMovie.getDate(), getTitleRoomSelected(), getTitleTimeSelected(),
+                        tvCountBooking.getText().toString(), getStringSeatChecked(),
+                        getStringFoodAndDrink(), mPaymentMethodSelected.getName(),
+                        getTotalAmount(), DataStoreManager.getUser().getEmail(), false);
+
+                if (ConstantKey.PAYMENT_CASH == mPaymentMethodSelected.getType()) {
+                    sendRequestOrder();
+                } else {
+                    getPaymentPaypal(getTotalAmount());
+                }
+            }
+        });
+
+        mDialog.show();
+    }
+
+
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PAYPAL_REQUEST_CODE) {
+            boolean isPaymentSuccess = false;
+
+            //If the result is OK i.e. user has not canceled the payment
+            if (resultCode == Activity.RESULT_OK) {
+                //Getting the payment confirmation
+                PaymentConfirmation confirm = data.getParcelableExtra(PaymentActivity.EXTRA_RESULT_CONFIRMATION);
+
+                //if confirmation is not null
+                if (confirm != null) {
+                    try {
+                        //Getting the payment details
+                        String paymentDetails = confirm.toJSONObject().toString(4);
+                        Log.e("Payment Result", paymentDetails);
+
+                        JSONObject jsonDetails = new JSONObject(paymentDetails);
+                        JSONObject jsonResponse = jsonDetails.getJSONObject("response");
+                        String strState = jsonResponse.getString("state");
+                        Log.e("Payment State", strState);
+                        if (PAYPAL_PAYMENT_STATUS_APPROVED.equals(strState)) {
+                            isPaymentSuccess = true;
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } else {
+                Toast.makeText(this, getString(R.string.msg_payment_error), Toast.LENGTH_SHORT).show();
+            }
+
+            // Send result payment
+            if (isPaymentSuccess) sendRequestOrder();
+        }
+    }
 
 
 }
