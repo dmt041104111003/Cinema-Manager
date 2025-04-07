@@ -560,7 +560,64 @@ public class ConfirmBookingActivity extends AppCompatActivity {
         return listFoodSelected;
     }
 
+    private String getStringFoodAndDrink() {
+        String result = "";
+        List<Food> listFoodSelected = getListFoodSelected();
+        if (listFoodSelected.isEmpty()) {
+            return "Không";
+        }
+        for (Food food : listFoodSelected) {
+            if (StringUtil.isEmpty(result)) {
+                result = food.getName() + " (" + food.getPrice()
+                        + ConstantKey.UNIT_CURRENCY + ")"
+                        + " - Số lượng: " + food.getCount();
+            } else {
+                result = result + "\n"
+                        + food.getName() + " (" + food.getPrice()
+                        + ConstantKey.UNIT_CURRENCY + ")"
+                        + " - Số lượng: " + food.getCount();
+            }
+        }
 
+        return result;
+    }
+
+    private String getStringSeatChecked() {
+        String result = "";
+        List<SeatLocal> listSeatChecked = getListSeatChecked();
+        for (SeatLocal seatLocal : listSeatChecked) {
+            if (StringUtil.isEmpty(result)) {
+                result = seatLocal.getTitle();
+            } else {
+                result = result + ", " + seatLocal.getTitle();
+            }
+        }
+
+        return result;
+    }
+
+    private int getTotalAmount() {
+        if (mMovie == null) {
+            return 0;
+        }
+        int countBooking = 0;
+        try {
+            countBooking = getListSeatChecked().size();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        int priceMovie = countBooking * mMovie.getPrice();
+
+        int priceFoodDrink = 0;
+        List<Food> listFoodSelected = getListFoodSelected();
+        if (!listFoodSelected.isEmpty()) {
+            for (Food food : listFoodSelected) {
+                priceFoodDrink = priceFoodDrink + food.getPrice() * food.getCount();
+            }
+        }
+
+        return priceMovie + priceFoodDrink;
+    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
