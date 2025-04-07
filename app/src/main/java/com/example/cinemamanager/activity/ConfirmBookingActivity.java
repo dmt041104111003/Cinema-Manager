@@ -167,7 +167,120 @@ public class ConfirmBookingActivity extends AppCompatActivity {
         return list;
     }
 
+    private String getTitleRoomSelected() {
+        for (Room room : mListRooms) {
+            if (room.isSelected()) {
+                mTitleRoomSelected = room.getTitle();
+                break;
+            }
+        }
+        return mTitleRoomSelected;
+    }
 
+    @SuppressLint("NotifyDataSetChanged")
+    private void onClickSelectRoom(Room room) {
+        for (int i = 0; i < mListRooms.size(); i++) {
+            mListRooms.get(i).setSelected(mListRooms.get(i).getId() == room.getId());
+        }
+        mRoomAdapter.notifyDataSetChanged();
+
+        showListTimes(room.getId());
+    }
+
+    private RoomFirebase getRoomFirebaseFromId(int roomId) {
+        RoomFirebase roomFirebase = new RoomFirebase();
+        if (mMovie.getRooms() != null) {
+            for (RoomFirebase roomFirebaseEntity : mMovie.getRooms()) {
+                if (roomFirebaseEntity.getId() == roomId) {
+                    roomFirebase = roomFirebaseEntity;
+                    break;
+                }
+            }
+        }
+        return roomFirebase;
+    }
+
+    private void showListTimes(int roomId) {
+        mActivityConfirmBookingBinding.layoutSelecteTime.setVisibility(View.VISIBLE);
+        mActivityConfirmBookingBinding.layoutSelecteSeat.setVisibility(View.GONE);
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 2);
+        mActivityConfirmBookingBinding.rcvTime.setLayoutManager(gridLayoutManager);
+
+        mListTimes = getListTimeLocal(roomId);
+        mTimeAdapter = new TimeAdapter(mListTimes, this::onClickSelectTime);
+        mActivityConfirmBookingBinding.rcvTime.setAdapter(mTimeAdapter);
+    }
+
+    private List<SlotTime> getListTimeLocal(int roomId) {
+        List<SlotTime> list = new ArrayList<>();
+        RoomFirebase roomFirebase = getRoomFirebaseFromId(roomId);
+        if (roomFirebase.getTimes() != null) {
+            for (TimeFirebase timeFirebase : roomFirebase.getTimes()) {
+                SlotTime slotTime = new SlotTime(timeFirebase.getId(), timeFirebase.getTitle(),
+                        false, roomId);
+                list.add(slotTime);
+            }
+        }
+        return list;
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    private void onClickSelectTime(SlotTime time) {
+        for (int i = 0; i < mListTimes.size(); i++) {
+            mListTimes.get(i).setSelected(mListTimes.get(i).getId() == time.getId());
+        }
+        mTimeAdapter.notifyDataSetChanged();
+
+        showListSeats(time);
+    }
+
+    private String getTitleTimeSelected() {
+        for (SlotTime time : mListTimes) {
+            if (time.isSelected()) {
+                mTitleTimeSelected = time.getTitle();
+                break;
+            }
+        }
+        return mTitleTimeSelected;
+    }
+
+    private void showListSeats(SlotTime time) {
+        mActivityConfirmBookingBinding.layoutSelecteSeat.setVisibility(View.VISIBLE);
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 6);
+        mActivityConfirmBookingBinding.rcvSeat.setLayoutManager(gridLayoutManager);
+
+        mListSeats = getListSeatLocal(time);
+        mSeatAdapter = new SeatAdapter(mListSeats, this::onClickItemSeat);
+        mActivityConfirmBookingBinding.rcvSeat.setAdapter(mSeatAdapter);
+    }
+
+    private List<SeatLocal> getListSeatLocal(SlotTime time) {
+        RoomFirebase roomFirebase = getRoomFirebaseFromId(time.getRoomId());
+        TimeFirebase timeFirebase = getTimeFirebaseFromId(roomFirebase, time.getId());
+
+        List<SeatLocal> list = new ArrayList<>();
+        if (timeFirebase.getSeats() != null) {
+            for (Seat seat : timeFirebase.getSeats()) {
+                SeatLocal seatLocal = new SeatLocal(seat.getId(), seat.getTitle(),
+                        seat.isSelected(), time.getRoomId(), time.getId());
+                list.add(seatLocal);
+            }
+        }
+        return list;
+    }
+
+    private TimeFirebase getTimeFirebaseFromId(RoomFirebase roomFirebase, int timeId) {
+        TimeFirebase timeFirebase = new TimeFirebase();
+        if (roomFirebase.getTimes() != null) {
+            for (TimeFirebase timeFirebaseEntity : roomFirebase.getTimes()) {
+                if (timeFirebaseEntity.getId() == timeId) {
+                    timeFirebase = timeFirebaseEntity;
+                    break;
+                }
+            }
+        }
+        return timeFirebase;
+    }
 
 
 }
