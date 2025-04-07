@@ -470,6 +470,96 @@ public class ConfirmBookingActivity extends AppCompatActivity {
         mDialog.show();
     }
 
+    private void sendRequestOrder() {
+        mMovie.setBooked(mMovie.getBooked() + Integer.parseInt(mBookingHistory.getCount()));
+        MyApplication.get(ConfirmBookingActivity.this).getMovieDatabaseReference()
+                .child(String.valueOf(mMovie.getId())).setValue(mMovie, (error, ref) ->
+                        MyApplication.get(ConfirmBookingActivity.this).getBookingDatabaseReference()
+                                .child(String.valueOf(mBookingHistory.getId()))
+                                .setValue(mBookingHistory, (error1, ref1) -> {
+
+                                    updateQuantityFoodDrink();
+
+                                    if (mDialog != null) mDialog.dismiss();
+                                    finish();
+
+                                    Toast.makeText(ConfirmBookingActivity.this,
+                                            getString(R.string.msg_booking_movie_success), Toast.LENGTH_LONG).show();
+                                    GlobalFunction.hideSoftKeyboard(ConfirmBookingActivity.this);
+                                }));
+    }
+
+    private void updateQuantityFoodDrink() {
+        if (mListFoodNeedUpdate == null || mListFoodNeedUpdate.isEmpty()) {
+            return;
+        }
+        for (Food food : mListFoodNeedUpdate) {
+            changeQuantity(food.getId(), food.getCount());
+        }
+    }
+
+    private void changeQuantity(long foodId, int quantity) {
+        MyApplication.get(this).getQuantityDatabaseReference(foodId)
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        Integer currentQuantity = snapshot.getValue(Integer.class);
+                        if (currentQuantity != null) {
+                            int totalQuantity = currentQuantity - quantity;
+                            MyApplication.get(ConfirmBookingActivity.this).getQuantityDatabaseReference(foodId).removeEventListener(this);
+                            MyApplication.get(ConfirmBookingActivity.this).getQuantityDatabaseReference(foodId).setValue(totalQuantity);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {}
+                });
+    }
+
+    private void getPaymentPaypal(int price) {
+        //Creating a paypalpayment
+        PayPalPayment payment = new PayPalPayment(new BigDecimal(String.valueOf(price)),
+                PayPalConfig.PAYPAL_CURRENCY, PayPalConfig.PAYPAl_CONTENT_TEXT,
+                PayPalPayment.PAYMENT_INTENT_SALE);
+
+        //Creating Paypal Payment activity intent
+        Intent intent = new Intent(this, PaymentActivity.class);
+
+        //putting the paypal configuration to the intent
+        intent.putExtra(PayPalService.EXTRA_PAYPAL_CONFIGURATION, PAYPAL_CONFIG);
+
+        //Puting paypal payment to the intent
+        intent.putExtra(PaymentActivity.EXTRA_PAYMENT, payment);
+
+        //Starting the intent activity for result
+        //the request code will be used on the method onActivityResult
+        startActivityForResult(intent, PAYPAL_REQUEST_CODE);
+    }
+
+    private List<SeatLocal> getListSeatChecked() {
+        List<SeatLocal> listSeatChecked = new ArrayList<>();
+        if (mListSeats != null) {
+            for (SeatLocal seat : mListSeats) {
+                if (seat.isChecked()) {
+                    listSeatChecked.add(seat);
+                }
+            }
+        }
+        return listSeatChecked;
+    }
+
+    private List<Food> getListFoodSelected() {
+        List<Food> listFoodSelected = new ArrayList<>();
+        if (mListFood != null) {
+            for (Food food : mListFood) {
+                if (food.getCount() > 0) {
+                    listFoodSelected.add(food);
+                }
+            }
+        }
+        return listFoodSelected;
+    }
+
 
 
     @Override
