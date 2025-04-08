@@ -7,6 +7,10 @@ android {
     namespace = "com.example.cinemamanager"
     compileSdk = 34
 
+    buildFeatures {
+        viewBinding = true
+    }
+
     defaultConfig {
         applicationId = "com.example.cinema"
         minSdk = 24
@@ -56,4 +60,10 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     implementation("org.jetbrains:annotations:23.0.0")
+
+    implementation("com.afollestad.material-dialogs:core:0.9.6.0")
+    implementation("com.google.code.gson:gson:2.10.1")
+    implementation(platform("com.google.firebase:firebase-bom:32.7.2"))
+    implementation("com.google.firebase:firebase-auth")
+
 }
