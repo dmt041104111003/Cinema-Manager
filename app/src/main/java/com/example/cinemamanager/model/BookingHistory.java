@@ -136,6 +136,8 @@ public class BookingHistory {
         return used;
     }
 
+
+
     public void setUsed(boolean used) {
         this.used = used;
     }
