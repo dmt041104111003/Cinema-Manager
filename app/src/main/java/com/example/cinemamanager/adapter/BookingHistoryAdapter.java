@@ -8,12 +8,12 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.cinema.R;
-import com.example.cinema.constant.ConstantKey;
-import com.example.cinema.databinding.ItemBookingHistoryBinding;
-import com.example.cinema.listener.IOnSingleClickListener;
-import com.example.cinema.model.BookingHistory;
-import com.example.cinema.util.DateTimeUtils;
+import com.example.cinemamanager.R;
+import com.example.cinemamanager.constant.ConstantKey;
+import com.example.cinemamanager.databinding.ItemBookingHistoryBinding;
+import com.example.cinemamanager.listener.IOnSingleClickListener;
+import com.example.cinemamanager.model.BookingHistory;
+import com.example.cinemamanager.util.DateTimeUtils;
 
 import java.util.List;
 
