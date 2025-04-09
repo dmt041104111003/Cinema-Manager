@@ -205,6 +205,24 @@ public class AddMovieActivity extends BaseActivity {
             return;
         }
 
-
+        // Add phim
+        showProgressDialog(true);
+        long movieId = System.currentTimeMillis();
+        Movie movie = new Movie(movieId, strName, strDescription, Integer.parseInt(strPrice),
+                strDate, strImage, strImageBanner, strVideo, GlobalFunction.getListRooms(),
+                mCategorySelected.getId(), mCategorySelected.getName(), 0);
+        MyApplication.get(this).getMovieDatabaseReference().child(String.valueOf(movieId)).setValue(movie, (error, ref) -> {
+            showProgressDialog(false);
+            mActivityAddMovieBinding.spnCategory.setSelection(0);
+            mActivityAddMovieBinding.edtName.setText("");
+            mActivityAddMovieBinding.edtDescription.setText("");
+            mActivityAddMovieBinding.edtPrice.setText("");
+            mActivityAddMovieBinding.tvDate.setText("");
+            mActivityAddMovieBinding.edtImage.setText("");
+            mActivityAddMovieBinding.edtImageBanner.setText("");
+            mActivityAddMovieBinding.edtVideo.setText("");
+            GlobalFunction.hideSoftKeyboard(this);
+            Toast.makeText(this, getString(R.string.msg_add_movie_successfully), Toast.LENGTH_SHORT).show();
+        });
     }
 }
