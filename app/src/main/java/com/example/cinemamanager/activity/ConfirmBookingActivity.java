@@ -626,7 +626,31 @@ public class ConfirmBookingActivity extends AppCompatActivity {
             boolean isPaymentSuccess = false;
 
             //If the result is OK i.e. user has not canceled the payment
+            if (resultCode == Activity.RESULT_OK) {
+                //Getting the payment confirmation
+                PaymentConfirmation confirm = data.getParcelableExtra(PaymentActivity.EXTRA_RESULT_CONFIRMATION);
 
+                //if confirmation is not null
+                if (confirm != null) {
+                    try {
+                        //Getting the payment details
+                        String paymentDetails = confirm.toJSONObject().toString(4);
+                        Log.e("Payment Result", paymentDetails);
+
+                        JSONObject jsonDetails = new JSONObject(paymentDetails);
+                        JSONObject jsonResponse = jsonDetails.getJSONObject("response");
+                        String strState = jsonResponse.getString("state");
+                        Log.e("Payment State", strState);
+                        if (PAYPAL_PAYMENT_STATUS_APPROVED.equals(strState)) {
+                            isPaymentSuccess = true;
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } else {
+                Toast.makeText(this, getString(R.string.msg_payment_error), Toast.LENGTH_SHORT).show();
+            }
 
             // Send result payment
             if (isPaymentSuccess) sendRequestOrder();
