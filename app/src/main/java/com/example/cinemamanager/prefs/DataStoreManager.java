@@ -4,8 +4,8 @@ import android.content.Context;
 
 import androidx.annotation.Nullable;
 
-import com.example.cinema.model.User;
-import com.example.cinema.util.StringUtil;
+import com.example.cinemamanager.model.User;
+import com.example.cinemamanager.util.StringUtil;
 import com.google.gson.Gson;
 
 public class DataStoreManager {
