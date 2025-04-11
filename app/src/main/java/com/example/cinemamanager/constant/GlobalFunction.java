@@ -9,9 +9,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.example.cinemamanager.R;
 import com.example.cinemamanager.activity.MainActivity;
 import com.example.cinemamanager.activity.MovieDetailActivity;
 import com.example.cinemamanager.activity.admin.AdminMainActivity;
@@ -20,156 +27,195 @@ import com.example.cinemamanager.model.Movie;
 import com.example.cinemamanager.model.RoomFirebase;
 import com.example.cinemamanager.model.Seat;
 import com.example.cinemamanager.model.TimeFirebase;
+import com.example.cinemamanager.model.User;
 import com.example.cinemamanager.prefs.DataStoreManager;
 import com.example.cinemamanager.util.StringUtil;
 import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
 import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
-public class GlobalFunction {
+public final class GlobalFunction {
 
-    public static void startActivity(Context context, Class<?> clz) {
+    private static final int QR_CODE_SIZE = 512;
+    private static final int MIN_SEAT_NUMBER = 1;
+    private static final int MAX_SEAT_NUMBER = 18;
+    private static final Handler mainHandler = new Handler(Looper.getMainLooper());
+
+    private GlobalFunction() {
+        // Private constructor to prevent instantiation
+    }
+
+    public static void startActivity(@NonNull Context context, @NonNull Class<?> clz) {
+        startActivity(context, clz, null);
+    }
+
+    public static void startActivity(@NonNull Context context, @NonNull Class<?> clz, @Nullable Bundle bundle) {
         Intent intent = new Intent(context, clz);
+        if (bundle != null) {
+            intent.putExtras(bundle);
+        }
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
     }
 
-    public static void startActivity(Context context, Class<?> clz, Bundle bundle) {
-        Intent intent = new Intent(context, clz);
-        intent.putExtras(bundle);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(intent);
-    }
-
-    public static String getTextSearch(String input) {
+    public static String getTextSearch(@Nullable String input) {
+        if (input == null) {
+            return "";
+        }
         String nfdNormalizedString = Normalizer.normalize(input, Normalizer.Form.NFD);
         Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
-        return pattern.matcher(nfdNormalizedString).replaceAll("");
+        return pattern.matcher(nfdNormalizedString).replaceAll("").toLowerCase();
     }
 
-    public static void hideSoftKeyboard(Activity activity) {
-        try {
-            InputMethodManager inputMethodManager = (InputMethodManager) activity.
-                    getSystemService(Activity.INPUT_METHOD_SERVICE);
-            inputMethodManager.hideSoftInputFromWindow(activity.getCurrentFocus().getWindowToken(), 0);
-        } catch (NullPointerException ex) {
-            ex.printStackTrace();
+    public static void hideSoftKeyboard(@NonNull Activity activity) {
+        View focusedView = activity.getCurrentFocus();
+        if (focusedView == null) {
+            return;
         }
+
+        mainHandler.post(() -> {
+            try {
+                InputMethodManager inputMethodManager = (InputMethodManager) activity
+                        .getSystemService(Activity.INPUT_METHOD_SERVICE);
+                if (inputMethodManager != null) {
+                    inputMethodManager.hideSoftInputFromWindow(focusedView.getWindowToken(), 0);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
-    public static void gotoMainActivity(Context context) {
-        if (DataStoreManager.getUser().isAdmin()) {
-            GlobalFunction.startActivity(context, AdminMainActivity.class);
-        } else {
-            GlobalFunction.startActivity(context, MainActivity.class);
+    public static void gotoMainActivity(@NonNull Context context) {
+        User user = DataStoreManager.getUser();
+        if (user == null) {
+            return;
         }
+
+        Class<?> targetActivity = user.isAdmin() ? AdminMainActivity.class : MainActivity.class;
+        startActivity(context, targetActivity);
     }
 
-    public static void goToMovieDetail(Context context, Movie movie) {
+    public static void goToMovieDetail(@NonNull Context context, @NonNull Movie movie) {
         Bundle bundle = new Bundle();
         bundle.putSerializable(ConstantKey.KEY_INTENT_MOVIE_OBJECT, movie);
-        GlobalFunction.startActivity(context, MovieDetailActivity.class, bundle);
+        startActivity(context, MovieDetailActivity.class, bundle);
     }
 
+    @NonNull
     public static List<RoomFirebase> getListRooms() {
         List<RoomFirebase> list = new ArrayList<>();
-        list.add(new RoomFirebase(1, "Phòng 1", getListTimes()));
-        list.add(new RoomFirebase(2, "Phòng 2", getListTimes()));
-        list.add(new RoomFirebase(3, "Phòng 3", getListTimes()));
-        list.add(new RoomFirebase(4, "Phòng 4", getListTimes()));
-        list.add(new RoomFirebase(5, "Phòng 5", getListTimes()));
-        list.add(new RoomFirebase(6, "Phòng 6", getListTimes()));
+        for (int i = 1; i <= 6; i++) {
+            list.add(new RoomFirebase(i, context.getString(R.string.room_name_format, i), getListTimes()));
+        }
         return list;
     }
 
+    @NonNull
     public static List<TimeFirebase> getListTimes() {
         List<TimeFirebase> list = new ArrayList<>();
-        list.add(new TimeFirebase(1, "7AM - 8AM", getListSeats()));
-        list.add(new TimeFirebase(2, "8AM - 9AM", getListSeats()));
-        list.add(new TimeFirebase(3, "9AM - 10AM", getListSeats()));
-        list.add(new TimeFirebase(4, "10AM - 11AM", getListSeats()));
-        list.add(new TimeFirebase(5, "1PM - 2PM", getListSeats()));
-        list.add(new TimeFirebase(6, "2PM - 3PM", getListSeats()));
+        String[] timeSlots = {
+            "7AM - 8AM", "8AM - 9AM", "9AM - 10AM",
+            "10AM - 11AM", "1PM - 2PM", "2PM - 3PM"
+        };
+
+        for (int i = 0; i < timeSlots.length; i++) {
+            list.add(new TimeFirebase(i + 1, timeSlots[i], getListSeats()));
+        }
         return list;
     }
 
+    @NonNull
     public static List<Seat> getListSeats() {
         List<Seat> list = new ArrayList<>();
-        list.add(new Seat(1, "1", false));
-        list.add(new Seat(2, "2", false));
-        list.add(new Seat(3, "3", false));
-        list.add(new Seat(4, "4", false));
-        list.add(new Seat(5, "5", false));
-        list.add(new Seat(6, "6", false));
-        list.add(new Seat(7, "7", false));
-        list.add(new Seat(8, "8", false));
-        list.add(new Seat(9, "9", false));
-        list.add(new Seat(10, "10", false));
-        list.add(new Seat(11, "11", false));
-        list.add(new Seat(12, "12", false));
-        list.add(new Seat(13, "13", false));
-        list.add(new Seat(14, "14", false));
-        list.add(new Seat(15, "15", false));
-        list.add(new Seat(16, "16", false));
-        list.add(new Seat(17, "17", false));
-        list.add(new Seat(18, "18", false));
+        for (int i = MIN_SEAT_NUMBER; i <= MAX_SEAT_NUMBER; i++) {
+            list.add(new Seat(i, String.valueOf(i), false));
+        }
         return list;
     }
 
-    public static void showDatePicker(Context context, String currentDate, final IGetDateListener getDateListener) {
-        Calendar mCalendar = Calendar.getInstance();
-        int currentDay = mCalendar.get(Calendar.DATE);
-        int currentMonth = mCalendar.get(Calendar.MONTH);
-        int currentYear = mCalendar.get(Calendar.YEAR);
-        mCalendar.set(currentYear, currentMonth, currentDay);
+    public static void showDatePicker(@NonNull Context context, @Nullable String currentDate,
+            @NonNull final IGetDateListener getDateListener) {
+        Calendar calendar = Calendar.getInstance();
+        int currentDay = calendar.get(Calendar.DATE);
+        int currentMonth = calendar.get(Calendar.MONTH);
+        int currentYear = calendar.get(Calendar.YEAR);
 
         if (!StringUtil.isEmpty(currentDate)) {
-            String[] split = currentDate.split("-");
-            currentDay = Integer.parseInt(split[0]);
-            currentMonth = Integer.parseInt(split[1]);
-            currentYear = Integer.parseInt(split[2]);
-            mCalendar.set(currentYear, currentMonth - 1, currentDay);
+            try {
+                String[] split = currentDate.split("-");
+                if (split.length == 3) {
+                    currentDay = Integer.parseInt(split[0]);
+                    currentMonth = Integer.parseInt(split[1]) - 1;
+                    currentYear = Integer.parseInt(split[2]);
+                }
+            } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+                e.printStackTrace();
+            }
         }
 
-        DatePickerDialog.OnDateSetListener callBack = (view, year, monthOfYear, dayOfMonth) -> {
-            String date = StringUtil.getDoubleNumber(dayOfMonth) + "-" + StringUtil.getDoubleNumber(monthOfYear + 1) + "-" + year;
+        calendar.set(currentYear, currentMonth, currentDay);
+        DatePickerDialog.OnDateSetListener callback = (view, year, monthOfYear, dayOfMonth) -> {
+            String date = String.format("%02d-%02d-%d", dayOfMonth, monthOfYear + 1, year);
             getDateListener.getDate(date);
         };
-        DatePickerDialog datePicker = new DatePickerDialog(context,
-                callBack, mCalendar.get(Calendar.YEAR), mCalendar.get(Calendar.MONTH),
-                mCalendar.get(Calendar.DATE));
+
+        DatePickerDialog datePicker = new DatePickerDialog(context, callback,
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DATE));
+
+        datePicker.getDatePicker().setMinDate(System.currentTimeMillis());
         datePicker.show();
     }
 
-    public static void gentQRCodeFromString(ImageView imageView, String id) {
-        if (imageView == null) {
+    public static void generateQRCode(@Nullable ImageView imageView, @Nullable String content) {
+        if (imageView == null || content == null) {
             return;
         }
-        BitMatrix result;
-        try {
-            result = new MultiFormatWriter().encode(id, BarcodeFormat.QR_CODE,
-                    512, 512, null);
-            int w = result.getWidth();
-            int h = result.getHeight();
-            int[] pixels = new int[w * h];
-            for (int y = 0; y < h; y++) {
-                int offset = y * w;
-                for (int x = 0; x < w; x++) {
-                    pixels[offset + x] = result.get(x, y) ? BLACK : WHITE;
-                }
-            }
 
-            Bitmap bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-            bitmap.setPixels(pixels, 0, w, 0, 0, w, h);
-            imageView.setImageBitmap(bitmap);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        mainHandler.post(() -> {
+            try {
+                Map<EncodeHintType, Object> hints = new EnumMap<>(EncodeHintType.class);
+                hints.put(EncodeHintType.CHARACTER_SET, "UTF-8");
+                hints.put(EncodeHintType.MARGIN, 1);
+
+                BitMatrix result = new MultiFormatWriter().encode(
+                        content,
+                        BarcodeFormat.QR_CODE,
+                        QR_CODE_SIZE,
+                        QR_CODE_SIZE,
+                        hints
+                );
+
+                int width = result.getWidth();
+                int height = result.getHeight();
+                int[] pixels = new int[width * height];
+
+                for (int y = 0; y < height; y++) {
+                    int offset = y * width;
+                    for (int x = 0; x < width; x++) {
+                        pixels[offset + x] = result.get(x, y) ? BLACK : WHITE;
+                    }
+                }
+
+                Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
+                imageView.setImageBitmap(bitmap);
+
+            } catch (WriterException e) {
+                e.printStackTrace();
+            }
+        });
     }
 }
