@@ -73,7 +73,7 @@ public class SignInActivity extends BaseActivity {
                     if (task.isSuccessful()) {
                         FirebaseUser user = firebaseAuth.getCurrentUser();
                         if (user != null) {
-                            User userObject = new User(user.getEmail(), password);
+                            User userObject = new User(user.getEmail());
                             if (user.getEmail() != null && user.getEmail().contains(ADMIN_EMAIL_FORMAT)) {
                                 userObject.setAdmin(true);
                             }
