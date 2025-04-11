@@ -31,37 +31,37 @@ public class AdminCategoryAdapter extends RecyclerView.Adapter<AdminCategoryAdap
     @NonNull
     @Override
     public CategoryViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemCategoryAdminBinding itemCategoryAdminBinding = ItemCategoryAdminBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new CategoryViewHolder(itemCategoryAdminBinding);
+        ItemCategoryAdminBinding binding = ItemCategoryAdminBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
+        return new CategoryViewHolder(binding);
     }
 
     @Override
     public void onBindViewHolder(@NonNull CategoryViewHolder holder, int position) {
         Category category = mListCategory.get(position);
-        if (category == null) {
-            return;
+        if (category != null) {
+            bindCategory(holder, category);
         }
-        GlideUtils.loadUrl(category.getImage(), holder.mItemCategoryAdminBinding.imgCategory);
-        holder.mItemCategoryAdminBinding.tvCategoryName.setText(category.getName());
-        holder.mItemCategoryAdminBinding.imgEdit.setOnClickListener(v -> iManagerCategoryListener.editCategory(category));
-        holder.mItemCategoryAdminBinding.imgDelete.setOnClickListener(v -> iManagerCategoryListener.deleteCategory(category));
+    }
+
+    private void bindCategory(@NonNull CategoryViewHolder holder, @NonNull Category category) {
+        GlideUtils.loadUrl(category.getImage(), holder.binding.imgCategory);
+        holder.binding.tvCategoryName.setText(category.getName());
+        holder.binding.imgEdit.setOnClickListener(v -> iManagerCategoryListener.editCategory(category));
+        holder.binding.imgDelete.setOnClickListener(v -> iManagerCategoryListener.deleteCategory(category));
     }
 
     @Override
     public int getItemCount() {
-        if (mListCategory != null) {
-            return mListCategory.size();
-        }
-        return 0;
+        return (mListCategory == null || mListCategory.isEmpty()) ? 0 : mListCategory.size();
     }
 
     public static class CategoryViewHolder extends RecyclerView.ViewHolder {
 
-        private final ItemCategoryAdminBinding mItemCategoryAdminBinding;
+        private final ItemCategoryAdminBinding binding;
 
-        public CategoryViewHolder(@NonNull ItemCategoryAdminBinding itemCategoryAdminBinding) {
-            super(itemCategoryAdminBinding.getRoot());
-            this.mItemCategoryAdminBinding = itemCategoryAdminBinding;
+        public CategoryViewHolder(@NonNull ItemCategoryAdminBinding binding) {
+            super(binding.getRoot());
+            this.binding = binding;
         }
     }
 }
