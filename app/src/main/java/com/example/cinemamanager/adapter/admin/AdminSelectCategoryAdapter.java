@@ -1,4 +1,4 @@
-package com.example.cinemamanager.adapter.admin;
+package com.example.cinema.adapter.admin;
 
 import android.content.Context;
 import android.view.View;
@@ -10,8 +10,8 @@ import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.example.cinemamanager.R;
-import com.example.cinemamanager.model.Category;
+import com.example.cinema.R;
+import com.example.cinema.model.Category;
 
 import java.util.List;
 
