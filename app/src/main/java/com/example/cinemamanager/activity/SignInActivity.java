@@ -40,28 +40,43 @@ public class SignInActivity extends BaseActivity {
     private void onClickValidateSignIn() {
         String strEmail = mActivitySignInBinding.edtEmail.getText().toString().trim();
         String strPassword = mActivitySignInBinding.edtPassword.getText().toString().trim();
-        if (StringUtil.isEmpty(strEmail)) {
-            Toast.makeText(SignInActivity.this, getString(R.string.msg_email_require), Toast.LENGTH_SHORT).show();
-        } else if (StringUtil.isEmpty(strPassword)) {
-            Toast.makeText(SignInActivity.this, getString(R.string.msg_password_require), Toast.LENGTH_SHORT).show();
-        } else if (!StringUtil.isValidEmail(strEmail)) {
-            Toast.makeText(SignInActivity.this, getString(R.string.msg_email_invalid), Toast.LENGTH_SHORT).show();
-        } else {
-            if (mActivitySignInBinding.rdbAdmin.isChecked()) {
-                if (!strEmail.contains(ADMIN_EMAIL_FORMAT)) {
-                    Toast.makeText(SignInActivity.this, getString(R.string.msg_email_invalid_admin), Toast.LENGTH_SHORT).show();
-                } else {
-                    signInUser(strEmail, strPassword);
-                }
-                return;
-            }
-
-            if (strEmail.contains(ADMIN_EMAIL_FORMAT)) {
-                Toast.makeText(SignInActivity.this, getString(R.string.msg_email_invalid_user), Toast.LENGTH_SHORT).show();
-            } else {
-                signInUser(strEmail, strPassword);
-            }
+        
+        if (!validateInputs(strEmail, strPassword)) {
+            return;
         }
+
+        boolean isAdmin = mActivitySignInBinding.rdbAdmin.isChecked();
+        if (isAdmin && !strEmail.contains(ADMIN_EMAIL_FORMAT)) {
+            showToast(R.string.msg_email_invalid_admin);
+            return;
+        }
+        
+        if (!isAdmin && strEmail.contains(ADMIN_EMAIL_FORMAT)) {
+            showToast(R.string.msg_email_invalid_user);
+            return;
+        }
+        
+        signInUser(strEmail, strPassword);
+    }
+
+    private boolean validateInputs(String email, String password) {
+        if (StringUtil.isEmpty(email)) {
+            showToast(R.string.msg_email_require);
+            return false;
+        }
+        if (StringUtil.isEmpty(password)) {
+            showToast(R.string.msg_password_require);
+            return false;
+        }
+        if (!StringUtil.isValidEmail(email)) {
+            showToast(R.string.msg_email_invalid);
+            return false;
+        }
+        return true;
+    }
+
+    private void showToast(@StringRes int messageId) {
+        Toast.makeText(this, getString(messageId), Toast.LENGTH_SHORT).show();
     }
 
     private void signInUser(String email, String password) {
