@@ -10,39 +10,111 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.example.cinemamanager.R;
 
 public abstract class BaseActivity extends AppCompatActivity {
-    protected MaterialDialog progressDialog, alertDialog;
+    
+    private static final String TAG = BaseActivity.class.getSimpleName();
+    private static final int MAX_DIALOG_DURATION_MS = 30000; // 30 seconds
+
+    @Nullable protected MaterialDialog progressDialog;
+    @Nullable protected MaterialDialog alertDialog;
+    private @Nullable Handler timeoutHandler;
+    private boolean isActivityActive = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        createProgressDialog();
-        createAlertDialog();
+        isActivityActive = true;
+        timeoutHandler = new Handler(Looper.getMainLooper());
+        initializeDialogs();
     }
 
-    public void createProgressDialog() {
-        progressDialog = new MaterialDialog.Builder(this)
-                .content(R.string.waiting_message)
-                .progress(true, 0)
-                .build();
+    @Override
+    protected void onResume() {
+        super.onResume();
+        isActivityActive = true;
     }
 
-    public void showProgressDialog(boolean value) {
-        if (value) {
-            if (progressDialog != null && !progressDialog.isShowing()) {
-                progressDialog.show();
-                progressDialog.setCancelable(false);
+    @Override
+    protected void onPause() {
+        super.onPause();
+        isActivityActive = false;
+        dismissAllDialogs();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        isActivityActive = false;
+        if (timeoutHandler != null) {
+            timeoutHandler.removeCallbacksAndMessages(null);
+            timeoutHandler = null;
+        }
+        dismissAllDialogs();
+    }
+
+    private void initializeDialogs() {
+        try {
+            if (!isFinishing()) {
+                createProgressDialog();
+                createAlertDialog();
             }
-        } else {
-            if (progressDialog != null && progressDialog.isShowing()) {
-                progressDialog.dismiss();
+        } catch (Exception e) {
+            Log.e(TAG, "Error initializing dialogs", e);
+        }
+    }
+
+    protected void createProgressDialog() {
+        if (isActivityActive && !isFinishing()) {
+            progressDialog = new MaterialDialog.Builder(this)
+                    .content(R.string.waiting_message)
+                    .progress(true, 0)
+                    .cancelable(false)
+                    .build();
+        }
+    }
+
+    public void showProgressDialog(final boolean show) {
+        if (!isActivityActive) return;
+
+        runOnUiThread(() -> {
+            try {
+                if (show) {
+                    if (progressDialog == null || progressDialog.isShowing()) {
+                        createProgressDialog();
+                    }
+                    if (progressDialog != null && !progressDialog.isShowing() && !isFinishing()) {
+                        progressDialog.show();
+                        startDialogTimeout();
+                    }
+                } else {
+                    dismissProgressDialog();
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error showing progress dialog", e);
             }
+        });
+    }
+
+    private void startDialogTimeout() {
+        if (timeoutHandler != null) {
+            timeoutHandler.removeCallbacksAndMessages(null);
+            timeoutHandler.postDelayed(this::dismissProgressDialog, MAX_DIALOG_DURATION_MS);
         }
     }
 
     public void dismissProgressDialog() {
-        if (progressDialog != null && progressDialog.isShowing()) {
-            progressDialog.dismiss();
-        }
+        if (!isActivityActive) return;
+
+        runOnUiThread(() -> {
+            try {
+                if (progressDialog != null && progressDialog.isShowing()) {
+                    progressDialog.dismiss();
+                }
+                progressDialog = null;
+            } catch (Exception e) {
+                Log.e(TAG, "Error dismissing progress dialog", e);
+            }
+        });
+    }
 
         if (alertDialog != null && alertDialog.isShowing()) {
             alertDialog.dismiss();
