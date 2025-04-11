@@ -1,15 +1,15 @@
-package com.example.cinemamanager.adapter.admin;
+package com.example.cinema.adapter.admin;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
-import com.example.cinemamanager.fragment.admin.AdminBookingFragment;
-import com.example.cinemamanager.fragment.admin.AdminCategoryFragment;
-import com.example.cinemamanager.fragment.admin.AdminFoodFragment;
-import com.example.cinemamanager.fragment.admin.AdminHomeFragment;
-import com.example.cinemamanager.fragment.admin.AdminManageFragment;
+import com.example.cinema.fragment.admin.AdminBookingFragment;
+import com.example.cinema.fragment.admin.AdminCategoryFragment;
+import com.example.cinema.fragment.admin.AdminFoodFragment;
+import com.example.cinema.fragment.admin.AdminHomeFragment;
+import com.example.cinema.fragment.admin.AdminManageFragment;
 
 public class AdminViewPagerAdapter extends FragmentStateAdapter {
 
