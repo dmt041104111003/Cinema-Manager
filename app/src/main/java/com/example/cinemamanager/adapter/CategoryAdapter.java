@@ -12,7 +12,7 @@ import com.example.cinemamanager.util.GlideUtils;
 
 import java.util.List;
 
-public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.CatogoryViewHolder> {
+public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.CategoryViewHolder> {
 
     private final List<Category> mListCategory;
     private final IManagerCategoryListener iManagerCategoryListener;
@@ -28,38 +28,33 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catogo
 
     @NonNull
     @Override
-    public CatogoryViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemCategoryBinding mItemCategoryBinding = ItemCategoryBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new CatogoryViewHolder(mItemCategoryBinding);
+    public CategoryViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        ItemCategoryBinding binding = ItemCategoryBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
+        return new CategoryViewHolder(binding);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull CatogoryViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull CategoryViewHolder holder, int position) {
         Category category = mListCategory.get(position);
-        if (category == null) {
-            return;
+        if (category != null) {
+            GlideUtils.loadUrl(category.getImage(), holder.binding.imgCategory);
+            holder.binding.tvCategoryName.setText(category.getName());
+            holder.binding.layoutItem.setOnClickListener(v -> iManagerCategoryListener.clickItemCategory(category));
         }
-        GlideUtils.loadUrl(category.getImage(), holder.mItemCategoryBinding.imgCategory);
-        holder.mItemCategoryBinding.tvCategoryName.setText(category.getName());
-
-        holder.mItemCategoryBinding.layoutItem.setOnClickListener(v -> iManagerCategoryListener.clickItemCategory(category));
     }
 
     @Override
     public int getItemCount() {
-        if (mListCategory != null) {
-            return mListCategory.size();
-        }
-        return 0;
+        return mListCategory == null ? 0 : mListCategory.size();
     }
 
-    public static class CatogoryViewHolder extends RecyclerView.ViewHolder {
+    public static class CategoryViewHolder extends RecyclerView.ViewHolder {
 
-        private final ItemCategoryBinding mItemCategoryBinding;
+        private final ItemCategoryBinding binding;
 
-        public CatogoryViewHolder(@NonNull ItemCategoryBinding itemCategoryBinding) {
-            super(itemCategoryBinding.getRoot());
-            this.mItemCategoryBinding = itemCategoryBinding;
+        public CategoryViewHolder(@NonNull ItemCategoryBinding binding) {
+            super(binding.getRoot());
+            this.binding = binding;
         }
     }
 }
