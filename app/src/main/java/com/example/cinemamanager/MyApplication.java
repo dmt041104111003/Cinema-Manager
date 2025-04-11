@@ -1,8 +1,12 @@
 package com.example.cinemamanager;
 
 import android.app.Application;
-<<<<<<< HEAD
 import android.content.Context;
+
+import com.example.cinemamanager.prefs.DataStoreManager;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class MyApplication extends Application {
 
@@ -37,17 +41,5 @@ public class MyApplication extends Application {
 
     public DatabaseReference getQuantityDatabaseReference(long foodId) {
         return FirebaseDatabase.getInstance().getReference("/food/" + foodId + "/quantity");
-=======
-
-import com.example.cinemamanager.prefs.DataStoreManager;
-
-public class MyApplication extends Application {
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-   
-        DataStoreManager.init(this);
->>>>>>> aa3ec73d255cc8b635a103114945c64efb205e9e
     }
 }

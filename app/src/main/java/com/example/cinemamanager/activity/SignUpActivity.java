@@ -16,58 +16,46 @@ import com.google.firebase.auth.FirebaseUser;
 
 public class SignUpActivity extends BaseActivity {
 
-    private ActivitySignUpBinding binding;
+    private ActivitySignUpBinding mActivitySignUpBinding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivitySignUpBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+        mActivitySignUpBinding = ActivitySignUpBinding.inflate(getLayoutInflater());
+        setContentView(mActivitySignUpBinding.getRoot());
 
-        binding.rdbUser.setChecked(true);
-        initListener();
-    }
+        mActivitySignUpBinding.rdbUser.setChecked(true);
 
-    private void initListener() {
-        binding.imgBack.setOnClickListener(v -> onBackPressed());
-        binding.layoutSignIn.setOnClickListener(v -> finish());
-        binding.btnSignUp.setOnClickListener(v -> onClickValidateSignUp());
+        mActivitySignUpBinding.imgBack.setOnClickListener(v -> onBackPressed());
+        mActivitySignUpBinding.layoutSignIn.setOnClickListener(v -> finish());
+        mActivitySignUpBinding.btnSignUp.setOnClickListener(v -> onClickValidateSignUp());
     }
 
     private void onClickValidateSignUp() {
-        String strEmail = binding.edtEmail.getText().toString().trim();
-        String strPassword = binding.edtPassword.getText().toString().trim();
-        
+        String strEmail = mActivitySignUpBinding.edtEmail.getText().toString().trim();
+        String strPassword = mActivitySignUpBinding.edtPassword.getText().toString().trim();
         if (StringUtil.isEmpty(strEmail)) {
-            Toast.makeText(this, R.string.msg_email_require, Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (StringUtil.isEmpty(strPassword)) {
-            Toast.makeText(this, R.string.msg_password_require, Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (!StringUtil.isValidEmail(strEmail)) {
-            Toast.makeText(this, R.string.msg_email_invalid, Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (binding.rdbAdmin.isChecked()) {
-            if (!strEmail.contains(ADMIN_EMAIL_FORMAT)) {
-                Toast.makeText(this, R.string.msg_email_invalid_admin, Toast.LENGTH_SHORT).show();
+            Toast.makeText(SignUpActivity.this, getString(R.string.msg_email_require), Toast.LENGTH_SHORT).show();
+        } else if (StringUtil.isEmpty(strPassword)) {
+            Toast.makeText(SignUpActivity.this, getString(R.string.msg_password_require), Toast.LENGTH_SHORT).show();
+        } else if (!StringUtil.isValidEmail(strEmail)) {
+            Toast.makeText(SignUpActivity.this, getString(R.string.msg_email_invalid), Toast.LENGTH_SHORT).show();
+        } else {
+            if (mActivitySignUpBinding.rdbAdmin.isChecked()) {
+                if (!strEmail.contains(ADMIN_EMAIL_FORMAT)) {
+                    Toast.makeText(SignUpActivity.this, getString(R.string.msg_email_invalid_admin), Toast.LENGTH_SHORT).show();
+                } else {
+                    signUpUser(strEmail, strPassword);
+                }
                 return;
             }
-            signUpUser(strEmail, strPassword);
-            return;
-        }
 
-        if (strEmail.contains(ADMIN_EMAIL_FORMAT)) {
-            Toast.makeText(this, R.string.msg_email_invalid_user, Toast.LENGTH_SHORT).show();
-            return;
+            if (strEmail.contains(ADMIN_EMAIL_FORMAT)) {
+                Toast.makeText(SignUpActivity.this, getString(R.string.msg_email_invalid_user), Toast.LENGTH_SHORT).show();
+            } else {
+                signUpUser(strEmail, strPassword);
+            }
         }
-        
-        signUpUser(strEmail, strPassword);
     }
 
     private void signUpUser(String email, String password) {
@@ -88,7 +76,7 @@ public class SignUpActivity extends BaseActivity {
                             finishAffinity();
                         }
                     } else {
-                        Toast.makeText(this, R.string.msg_sign_up_error,
+                        Toast.makeText(SignUpActivity.this, getString(R.string.msg_sign_up_error),
                                 Toast.LENGTH_SHORT).show();
                     }
                 });

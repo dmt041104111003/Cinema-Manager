@@ -56,19 +56,19 @@ public class MovieDetailActivity extends AppCompatActivity {
     private void getMovieInformation(long movieId) {
         MyApplication.get(this).getMovieDatabaseReference().child(String.valueOf(movieId))
                 .addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        mMovie = snapshot.getValue(Movie.class);
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                mMovie = snapshot.getValue(Movie.class);
 
-                        displayDataMovie();
-                        initListener();
-                    }
+                displayDataMovie();
+                initListener();
+            }
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
 
-                    }
-                });
+            }
+        });
     }
 
     private void displayDataMovie() {

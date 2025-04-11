@@ -1,6 +1,5 @@
 package com.example.cinemamanager.constant;
 
-<<<<<<< HEAD
 import static android.graphics.Color.BLACK;
 import static android.graphics.Color.WHITE;
 
@@ -13,6 +12,20 @@ import android.os.Bundle;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 
+import com.example.cinemamanager.activity.MainActivity;
+import com.example.cinemamanager.activity.MovieDetailActivity;
+import com.example.cinemamanager.activity.admin.AdminMainActivity;
+import com.example.cinemamanager.listener.IGetDateListener;
+import com.example.cinemamanager.model.Movie;
+import com.example.cinemamanager.model.RoomFirebase;
+import com.example.cinemamanager.model.Seat;
+import com.example.cinemamanager.model.TimeFirebase;
+import com.example.cinemamanager.prefs.DataStoreManager;
+import com.example.cinemamanager.util.StringUtil;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.common.BitMatrix;
+
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -21,146 +34,10 @@ import java.util.regex.Pattern;
 
 public class GlobalFunction {
 
-    model/BookingHistory.java
-    public class BookingHistory {
-        private long id;
-        private long movieId;
-        private String name;
-        private String date;
-        private String room;
-        private String time;
-        private String count;
-        private String seats;
-        private String foods;
-        private String payment;
-        private int total;
-        private String user;
-        private boolean used;
-
-        public BookingHistory() {
-        }
-
-        public BookingHistory(long id, long movieId, String name, String date, String room, String time,
-                              String count, String seats, String foods, String payment,
-                              int total, String user, boolean used) {
-            this.id = id;
-            this.movieId = movieId;
-            this.name = name;
-            this.date = date;
-            this.room = room;
-            this.time = time;
-            this.count = count;
-            this.seats = seats;
-            this.foods = foods;
-            this.payment = payment;
-            this.total = total;
-            this.user = user;
-            this.used = used;
-        }
-
-        public long getId() {
-            return id;
-        }
-
-        public void setId(long id) {
-            this.id = id;
-        }
-
-        public long getMovieId() {
-            return movieId;
-        }
-
-        public void setMovieId(long movieId) {
-            this.movieId = movieId;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getDate() {
-            return date;
-        }
-
-        public void setDate(String date) {
-            this.date = date;
-        }
-
-        public String getRoom() {
-            return room;
-        }
-
-        public void setRoom(String room) {
-            this.room = room;
-        }
-
-        public String getTime() {
-            return time;
-        }
-
-        public void setTime(String time) {
-            this.time = time;
-        }
-
-        public String getCount() {
-            return count;
-        }
-
-        public void setCount(String count) {
-            this.count = count;
-        }
-
-        public String getSeats() {
-            return seats;
-        }
-
-        public void setSeats(String seats) {
-            this.seats = seats;
-        }
-
-        public String getFoods() {
-            return foods;
-        }
-
-        public void setFoods(String foods) {
-            this.foods = foods;
-        }
-
-        public String getPayment() {
-            return payment;
-        }
-
-        public void setPayment(String payment) {
-            this.payment = payment;
-        }
-
-        public int getTotal() {
-            return total;
-        }
-
-        public void setTotal(int total) {
-            this.total = total;
-        }
-
-        public String getUser() {
-            return user;
-        }
-
-        public void setUser(String user) {
-            this.user = user;
-        }
-
-        public boolean isUsed() {
-            return used;
-        }
-
-        public void setUsed(boolean used) {
-            this.used = used;
-        }
+    public static void startActivity(Context context, Class<?> clz) {
+        Intent intent = new Intent(context, clz);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
     }
 
     public static void startActivity(Context context, Class<?> clz, Bundle bundle) {
@@ -294,34 +171,5 @@ public class GlobalFunction {
         } catch (Exception e) {
             e.printStackTrace();
         }
-=======
-import android.app.Activity;
-import android.content.Intent;
-
-import com.example.cinemamanager.activity.MainActivity;
-
-public class GlobalFunction {
-
-    public static void gotoMainActivity(Activity activity) {
-        Intent intent = new Intent(activity, MainActivity.class);
-        activity.startActivity(intent);
-    }
-
-    public static void startActivity(Activity activity, Class<?> clz) {
-        Intent intent = new Intent(activity, clz);
-        activity.startActivity(intent);
-    }
-
-    public static void startActivity(Activity activity, Class<?> clz, String key, Object value) {
-        Intent intent = new Intent(activity, clz);
-        if (value instanceof String) {
-            intent.putExtra(key, (String) value);
-        } else if (value instanceof Integer) {
-            intent.putExtra(key, (Integer) value);
-        } else if (value instanceof Boolean) {
-            intent.putExtra(key, (Boolean) value);
-        }
-        activity.startActivity(intent);
->>>>>>> aa3ec73d255cc8b635a103114945c64efb205e9e
     }
 }

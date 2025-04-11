@@ -2,6 +2,9 @@ package com.example.cinemamanager.util;
 
 import android.widget.ImageView;
 
+import com.bumptech.glide.Glide;
+import com.example.cinema.R;
+
 public class GlideUtils {
 
     public static void loadUrlBanner(String url, ImageView imageView) {
