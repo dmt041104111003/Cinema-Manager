@@ -14,15 +14,15 @@ import java.util.List;
 
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHolder> {
 
-    private final List<Movie> mListMovies;
+    private final List<Movie> ListMovies;
     private final IManagerMovieListener iManagerMovieListener;
 
     public interface IManagerMovieListener {
         void clickItemMovie(Movie movie);
     }
 
-    public MovieAdapter(List<Movie> mListMovies, IManagerMovieListener iManagerMovieListener) {
-        this.mListMovies = mListMovies;
+    public MovieAdapter(List<Movie> ListMovies, IManagerMovieListener iManagerMovieListener) {
+        this.ListMovies = ListMovies;
         this.iManagerMovieListener = iManagerMovieListener;
     }
 
@@ -35,7 +35,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
     @Override
     public void onBindViewHolder(@NonNull MovieViewHolder holder, int position) {
-        Movie movie = mListMovies.get(position);
+        Movie movie = ListMovies.get(position);
         if (movie == null) {
             return;
         }
@@ -48,8 +48,8 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
     @Override
     public int getItemCount() {
-        if (mListMovies != null) {
-            return mListMovies.size();
+        if (ListMovies != null) {
+            return ListMovies.size();
         }
         return 0;
     }
