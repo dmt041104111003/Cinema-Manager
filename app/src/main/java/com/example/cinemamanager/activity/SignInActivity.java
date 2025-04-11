@@ -14,7 +14,9 @@ import com.example.cinemamanager.util.StringUtil;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.FirebaseAuthInvalidUserException;
+import com.google.firebase.auth.FirebaseTooManyRequestsException;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.FirebaseNetworkException;
 
 public class SignInActivity extends BaseActivity {
 
@@ -121,6 +123,10 @@ public class SignInActivity extends BaseActivity {
             showToast(R.string.msg_user_not_found);
         } else if (exception instanceof FirebaseAuthInvalidCredentialsException) {
             showToast(R.string.msg_invalid_password);
+        } else if (exception instanceof FirebaseTooManyRequestsException) {
+            showToast(R.string.msg_too_many_requests);
+        } else if (exception instanceof FirebaseNetworkException) {
+            showToast(R.string.msg_network_error);
         } else {
             showToast(R.string.msg_sign_in_error);
         }
