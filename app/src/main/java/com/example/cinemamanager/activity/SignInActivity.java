@@ -12,6 +12,8 @@ import com.example.cinemamanager.model.User;
 import com.example.cinemamanager.prefs.DataStoreManager;
 import com.example.cinemamanager.util.StringUtil;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
+import com.google.firebase.auth.FirebaseAuthInvalidUserException;
 import com.google.firebase.auth.FirebaseUser;
 
 public class SignInActivity extends BaseActivity {
@@ -86,20 +88,41 @@ public class SignInActivity extends BaseActivity {
                 .addOnCompleteListener(this, task -> {
                     showProgressDialog(false);
                     if (task.isSuccessful()) {
-                        FirebaseUser user = firebaseAuth.getCurrentUser();
-                        if (user != null) {
-                            User userObject = new User(user.getEmail());
-                            if (user.getEmail() != null && user.getEmail().contains(ADMIN_EMAIL_FORMAT)) {
-                                userObject.setAdmin(true);
-                            }
-                            DataStoreManager.setUser(userObject);
-                            GlobalFunction.gotoMainActivity(this);
-                            finishAffinity();
-                        }
+                        handleSuccessfulSignIn(firebaseAuth.getCurrentUser());
                     } else {
-                        Toast.makeText(SignInActivity.this, getString(R.string.msg_sign_in_error),
-                                Toast.LENGTH_SHORT).show();
+                        handleSignInError(task.getException());
                     }
                 });
+    }
+
+    private void handleSuccessfulSignIn(FirebaseUser user) {
+        if (user == null) {
+            showToast(R.string.msg_sign_in_error);
+            return;
+        }
+
+        String email = user.getEmail();
+        if (email == null) {
+            showToast(R.string.msg_sign_in_error);
+            return;
+        }
+
+        User userObject = new User(email);
+        if (email.contains(ADMIN_EMAIL_FORMAT)) {
+            userObject.setAdmin(true);
+        }
+        DataStoreManager.setUser(userObject);
+        GlobalFunction.gotoMainActivity(this);
+        finishAffinity();
+    }
+
+    private void handleSignInError(Exception exception) {
+        if (exception instanceof FirebaseAuthInvalidUserException) {
+            showToast(R.string.msg_user_not_found);
+        } else if (exception instanceof FirebaseAuthInvalidCredentialsException) {
+            showToast(R.string.msg_invalid_password);
+        } else {
+            showToast(R.string.msg_sign_in_error);
+        }
     }
 }
