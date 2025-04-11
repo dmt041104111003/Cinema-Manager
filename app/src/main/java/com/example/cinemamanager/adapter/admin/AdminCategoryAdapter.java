@@ -1,4 +1,4 @@
-package com.example.cinema.adapter.admin;
+package com.example.cinemamanager.adapter.admin;
 
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
@@ -6,9 +6,9 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.cinema.databinding.ItemCategoryAdminBinding;
-import com.example.cinema.model.Category;
-import com.example.cinema.util.GlideUtils;
+import com.example.cinemamanager.databinding.ItemCategoryAdminBinding;
+import com.example.cinemamanager.model.Category;
+import com.example.cinemamanager.util.GlideUtils;
 
 import java.util.List;
 

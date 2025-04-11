@@ -1,4 +1,4 @@
-package com.example.cinema.adapter.admin;
+package com.example.cinemamanager.adapter.admin;
 
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
@@ -6,9 +6,9 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.cinema.constant.ConstantKey;
-import com.example.cinema.databinding.ItemFoodBinding;
-import com.example.cinema.model.Food;
+import com.example.cinemamanager.constant.ConstantKey;
+import com.example.cinemamanager.databinding.ItemFoodBinding;
+import com.example.cinemamanager.model.Food;
 
 import java.util.List;
 

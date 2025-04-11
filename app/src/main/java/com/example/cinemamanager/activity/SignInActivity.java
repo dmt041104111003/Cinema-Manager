@@ -3,9 +3,7 @@ package com.example.cinemamanager.activity;
 import static com.example.cinemamanager.constant.ConstantKey.ADMIN_EMAIL_FORMAT;
 
 import android.os.Bundle;
-import android.text.TextUtils;
-
-import androidx.annotation.NonNull;
+import android.widget.Toast;
 
 import com.example.cinemamanager.R;
 import com.example.cinemamanager.constant.GlobalFunction;
@@ -14,139 +12,79 @@ import com.example.cinemamanager.model.User;
 import com.example.cinemamanager.prefs.DataStoreManager;
 import com.example.cinemamanager.util.StringUtil;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
-import com.google.firebase.auth.FirebaseAuthInvalidUserException;
-import com.google.firebase.auth.FirebaseNetworkException;
 import com.google.firebase.auth.FirebaseUser;
 
 public class SignInActivity extends BaseActivity {
 
-    private ActivitySignInBinding binding;
-    private FirebaseAuth firebaseAuth;
-    private static final int MAX_LOGIN_ATTEMPTS = 3;
-    private int loginAttempts = 0;
+    private ActivitySignInBinding mActivitySignInBinding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivitySignInBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+        mActivitySignInBinding = ActivitySignInBinding.inflate(getLayoutInflater());
+        setContentView(mActivitySignInBinding.getRoot());
 
-        initializeFirebase();
-        setupClickListeners();
-        restoreLoginState();
+        mActivitySignInBinding.rdbUser.setChecked(true);
 
-        binding.rdbUser.setChecked(true);
-        binding.layoutSignUp.setOnClickListener(
+        mActivitySignInBinding.layoutSignUp.setOnClickListener(
                 v -> GlobalFunction.startActivity(SignInActivity.this, SignUpActivity.class));
-        binding.tvForgotPassword.setOnClickListener(v -> onClickForgotPassword());
+
+        mActivitySignInBinding.btnSignIn.setOnClickListener(v -> onClickValidateSignIn());
+        mActivitySignInBinding.tvForgotPassword.setOnClickListener(v -> onClickForgotPassword());
     }
 
-    private void initializeFirebase() {
-        firebaseAuth = FirebaseAuth.getInstance();
-    }
-
-    private void setupClickListeners() {
-        binding.btnSignIn.setOnClickListener(v -> onClickValidateSignIn());
-    }
-
-    private void restoreLoginState() {
-        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
-        if (currentUser != null) {
-            GlobalFunction.gotoMainActivity(this);
-            finish();
-        }
+    private void onClickForgotPassword() {
+        GlobalFunction.startActivity(this, ForgotPasswordActivity.class);
     }
 
     private void onClickValidateSignIn() {
-        if (loginAttempts >= MAX_LOGIN_ATTEMPTS) {
-            showAlertDialog(R.string.msg_too_many_attempts);
-            return;
-        }
+        String strEmail = mActivitySignInBinding.edtEmail.getText().toString().trim();
+        String strPassword = mActivitySignInBinding.edtPassword.getText().toString().trim();
+        if (StringUtil.isEmpty(strEmail)) {
+            Toast.makeText(SignInActivity.this, getString(R.string.msg_email_require), Toast.LENGTH_SHORT).show();
+        } else if (StringUtil.isEmpty(strPassword)) {
+            Toast.makeText(SignInActivity.this, getString(R.string.msg_password_require), Toast.LENGTH_SHORT).show();
+        } else if (!StringUtil.isValidEmail(strEmail)) {
+            Toast.makeText(SignInActivity.this, getString(R.string.msg_email_invalid), Toast.LENGTH_SHORT).show();
+        } else {
+            if (mActivitySignInBinding.rdbAdmin.isChecked()) {
+                if (!strEmail.contains(ADMIN_EMAIL_FORMAT)) {
+                    Toast.makeText(SignInActivity.this, getString(R.string.msg_email_invalid_admin), Toast.LENGTH_SHORT).show();
+                } else {
+                    signInUser(strEmail, strPassword);
+                }
+                return;
+            }
 
-        String email = binding.edtEmail.getText().toString().trim();
-        String password = binding.edtPassword.getText().toString().trim();
-
-        if (!validateInput(email, password)) {
-            return;
+            if (strEmail.contains(ADMIN_EMAIL_FORMAT)) {
+                Toast.makeText(SignInActivity.this, getString(R.string.msg_email_invalid_user), Toast.LENGTH_SHORT).show();
+            } else {
+                signInUser(strEmail, strPassword);
+            }
         }
-
-        boolean isAdmin = binding.rdbAdmin.isChecked();
-        if (isAdmin && !email.contains(ADMIN_EMAIL_FORMAT)) {
-            showToast(R.string.msg_email_invalid_admin);
-            return;
-        }
-        
-        if (!isAdmin && email.contains(ADMIN_EMAIL_FORMAT)) {
-            showToast(R.string.msg_email_invalid_user);
-            return;
-        }
-        
-        signInUser(email, password);
-    }
-
-    private boolean validateInput(String email, String password) {
-        if (TextUtils.isEmpty(email)) {
-            showToast(R.string.msg_email_require);
-            binding.edtEmail.requestFocus();
-            return false;
-        }
-
-        if (TextUtils.isEmpty(password)) {
-            showToast(R.string.msg_password_require);
-            binding.edtPassword.requestFocus();
-            return false;
-        }
-
-        if (!StringUtil.isValidEmail(email)) {
-            showToast(R.string.msg_email_invalid);
-            binding.edtEmail.requestFocus();
-            return false;
-        }
-
-        return true;
     }
 
     private void signInUser(String email, String password) {
         showProgressDialog(true);
+        FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
         firebaseAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
                     showProgressDialog(false);
                     if (task.isSuccessful()) {
-                        handleSuccessfulSignIn(email);
+                        FirebaseUser user = firebaseAuth.getCurrentUser();
+                        if (user != null) {
+                            User userObject = new User(user.getEmail(), password);
+                            if (user.getEmail() != null && user.getEmail().contains(ADMIN_EMAIL_FORMAT)) {
+                                userObject.setAdmin(true);
+                            }
+                            DataStoreManager.setUser(userObject);
+                            GlobalFunction.gotoMainActivity(this);
+                            finishAffinity();
+                        }
                     } else {
-                        handleSignInError(task.getException());
-                        loginAttempts++;
+                        Toast.makeText(SignInActivity.this, getString(R.string.msg_sign_in_error),
+                                Toast.LENGTH_SHORT).show();
                     }
                 });
-    }
-
-    private void handleSuccessfulSignIn(String email) {
-        FirebaseUser user = firebaseAuth.getCurrentUser();
-        if (user != null) {
-            boolean isAdmin = email.contains(ADMIN_EMAIL_FORMAT);
-            User userObject = new User(email);
-            userObject.setAdmin(isAdmin);
-            DataStoreManager.setUser(userObject);
-            GlobalFunction.gotoMainActivity(this);
-            finishAffinity();
-        }
-        DataStoreManager.setUser(userObject);
-        GlobalFunction.gotoMainActivity(this);
-        finishAffinity();
-    }
-
-    private void handleSignInError(Exception exception) {
-        if (exception instanceof FirebaseAuthInvalidUserException) {
-            showToast(R.string.msg_user_not_found);
-        } else if (exception instanceof FirebaseAuthInvalidCredentialsException) {
-            showToast(R.string.msg_invalid_password);
-        } else if (exception instanceof FirebaseTooManyRequestsException) {
-            showToast(R.string.msg_too_many_requests);
-        } else if (exception instanceof FirebaseNetworkException) {
-            showToast(R.string.msg_network_error);
-        } else {
-            showToast(R.string.msg_sign_in_error);
-        }
     }
 }
