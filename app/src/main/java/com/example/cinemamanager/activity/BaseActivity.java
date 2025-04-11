@@ -20,20 +20,25 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     public void createProgressDialog() {
-        progressDialog = new MaterialDialog.Builder(this)
-                .content(R.string.waiting_message)
-                .progress(true, 0)
-                .build();
+        if (progressDialog == null) {
+            progressDialog = new MaterialDialog.Builder(this)
+                    .content(R.string.waiting_message)
+                    .progress(true, 0)
+                    .build();
+        }
     }
 
     public void showProgressDialog(boolean value) {
+        if (progressDialog == null) {
+            createProgressDialog();
+        }
         if (value) {
-            if (progressDialog != null && !progressDialog.isShowing()) {
+            if (!isFinishing() && !progressDialog.isShowing()) {
                 progressDialog.show();
                 progressDialog.setCancelable(false);
             }
         } else {
-            if (progressDialog != null && progressDialog.isShowing()) {
+            if (progressDialog.isShowing()) {
                 progressDialog.dismiss();
             }
         }
@@ -50,21 +55,33 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     public void createAlertDialog() {
-        alertDialog = new MaterialDialog.Builder(this)
-                .title(R.string.app_name)
-                .positiveText(R.string.action_ok)
-                .cancelable(false)
-                .build();
+        if (alertDialog == null) {
+            alertDialog = new MaterialDialog.Builder(this)
+                    .title(R.string.app_name)
+                    .positiveText(R.string.action_ok)
+                    .cancelable(false)
+                    .build();
+        }
     }
 
     public void showAlertDialog(String errorMessage) {
-        alertDialog.setContent(errorMessage);
-        alertDialog.show();
+        if (alertDialog == null) {
+            createAlertDialog();
+        }
+        if (!isFinishing()) {
+            alertDialog.setContent(errorMessage);
+            alertDialog.show();
+        }
     }
 
     public void showAlertDialog(@StringRes int resourceId) {
-        alertDialog.setContent(resourceId);
-        alertDialog.show();
+        if (alertDialog == null) {
+            createAlertDialog();
+        }
+        if (!isFinishing()) {
+            alertDialog.setContent(resourceId);
+            alertDialog.show();
+        }
     }
 
     public void setCancelProgress(boolean isCancel) {
@@ -74,14 +91,14 @@ public abstract class BaseActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onDestroy() {
-        if (progressDialog != null && progressDialog.isShowing()) {
-            progressDialog.dismiss();
-        }
+    protected void onPause() {
+        super.onPause();
+        dismissProgressDialog();
+    }
 
-        if (alertDialog != null && alertDialog.isShowing()) {
-            alertDialog.dismiss();
-        }
+    @Override
+    protected void onDestroy() {
+        dismissProgressDialog();
         super.onDestroy();
     }
 }
