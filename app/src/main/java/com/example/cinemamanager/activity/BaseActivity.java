@@ -1,4 +1,4 @@
-package com.example.cinemamanager.activity;
+package com.example.cinema.activity;
 
 import android.os.Bundle;
 

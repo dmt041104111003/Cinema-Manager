@@ -1,21 +1,28 @@
-package com.example.cinemamanager.activity;
+package com.example.cinemamanager.fragment.admin;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.cinemamanager.MyApplication;
 import com.example.cinemamanager.R;
-import com.example.cinemamanager.adapter.MovieAdapter;
+import com.example.cinemamanager.activity.admin.AddMovieActivity;
+import com.example.cinemamanager.adapter.admin.AdminMovieAdapter;
+import com.example.cinemamanager.constant.ConstantKey;
 import com.example.cinemamanager.constant.GlobalFunction;
-import com.example.cinemamanager.databinding.ActivitySearchBinding;
+import com.example.cinemamanager.databinding.FragmentAdminHomeBinding;
 import com.example.cinemamanager.model.Category;
 import com.example.cinemamanager.model.Movie;
 import com.example.cinemamanager.util.StringUtil;
@@ -27,64 +34,64 @@ import com.wefika.flowlayout.FlowLayout;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SearchActivity extends AppCompatActivity implements View.OnClickListener {
+public class AdminHomeFragment extends Fragment implements View.OnClickListener {
 
-    private ActivitySearchBinding mActivitySearchBinding;
+    private FragmentAdminHomeBinding mFragmentAdminHomeBinding;
+    private List<Movie> mListMovies;
+    private AdminMovieAdapter mAdminMovieAdapter;
+
     private List<Category> mListCategory;
     private Category mCategorySelected;
-    private List<Movie> mListMovies;
 
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        mActivitySearchBinding = ActivitySearchBinding.inflate(getLayoutInflater());
-        setContentView(mActivitySearchBinding.getRoot());
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        mFragmentAdminHomeBinding = FragmentAdminHomeBinding.inflate(inflater, container, false);
 
         initListener();
         getListCategory();
+        return mFragmentAdminHomeBinding.getRoot();
     }
 
     private void initListener() {
-        mActivitySearchBinding.imageBack.setOnClickListener(v -> {
-            GlobalFunction.hideSoftKeyboard(SearchActivity.this);
-            onBackPressed();
-        });
-        mActivitySearchBinding.imageDelete.setOnClickListener(v -> mActivitySearchBinding.edtKeyword.setText(""));
-        mActivitySearchBinding.edtKeyword.setOnEditorActionListener((v, actionId, event) -> {
+        mFragmentAdminHomeBinding.btnAddMovie.setOnClickListener(v -> onClickAddMovie());
+
+        mFragmentAdminHomeBinding.imgSearch.setOnClickListener(view1 -> searchMovie());
+
+        mFragmentAdminHomeBinding.edtSearchName.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 searchMovie();
                 return true;
             }
             return false;
         });
-        mActivitySearchBinding.edtKeyword.addTextChangedListener(new TextWatcher() {
+
+        mFragmentAdminHomeBinding.edtSearchName.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (s.toString().trim().length() > 0) {
-                    mActivitySearchBinding.imageDelete.setVisibility(View.VISIBLE);
-                } else {
-                    mActivitySearchBinding.imageDelete.setVisibility(View.GONE);
-                    searchMovie();
-                }
             }
 
             @Override
             public void afterTextChanged(Editable s) {
+                String strKey = s.toString().trim();
+                if (strKey.equals("") || strKey.length() == 0) {
+                    searchMovie();
+                }
             }
         });
     }
 
     private void getListCategory() {
-        MyApplication.get(this).getCategoryDatabaseReference().addValueEventListener(new ValueEventListener() {
+        if (getActivity() == null) {
+            return;
+        }
+        MyApplication.get(getActivity()).getCategoryDatabaseReference().addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                mActivitySearchBinding.tvCategoryTitle.setVisibility(View.VISIBLE);
-                mActivitySearchBinding.layoutCategory.setVisibility(View.VISIBLE);
-
                 if (mListCategory != null) {
                     mListCategory.clear();
                 } else {
@@ -98,19 +105,17 @@ public class SearchActivity extends AppCompatActivity implements View.OnClickLis
                 }
                 mCategorySelected = new Category(0, getString(R.string.label_all), "");
                 mListCategory.add(0, mCategorySelected);
-                initLayoutCategory("");
+                initLayoutCategory("0");
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                mActivitySearchBinding.tvCategoryTitle.setVisibility(View.GONE);
-                mActivitySearchBinding.layoutCategory.setVisibility(View.GONE);
             }
         });
     }
 
     private void initLayoutCategory(String tag) {
-        mActivitySearchBinding.layoutCategory.removeAllViews();
+        mFragmentAdminHomeBinding.layoutCategory.removeAllViews();
         if (mListCategory != null && !mListCategory.isEmpty()) {
             for (int i = 0; i < mListCategory.size(); i++) {
                 Category category = mListCategory.get(i);
@@ -118,7 +123,7 @@ public class SearchActivity extends AppCompatActivity implements View.OnClickLis
                 FlowLayout.LayoutParams params =
                         new FlowLayout.LayoutParams(FlowLayout.LayoutParams.WRAP_CONTENT,
                                 FlowLayout.LayoutParams.WRAP_CONTENT);
-                TextView textView = new TextView(SearchActivity.this);
+                TextView textView = new TextView(getActivity());
                 params.setMargins(0, 10, 20, 10);
                 textView.setLayoutParams(params);
                 textView.setPadding(30, 10, 30, 10);
@@ -133,16 +138,48 @@ public class SearchActivity extends AppCompatActivity implements View.OnClickLis
                     textView.setBackgroundResource(R.drawable.bg_white_shape_round_corner_border_grey);
                     textView.setTextColor(getResources().getColor(R.color.colorPrimary));
                 }
-                textView.setTextSize(((int) getResources().getDimension(R.dimen.text_size_small) /
+                textView.setTextSize(((int) getResources().getDimension(R.dimen.text_size_xsmall) /
                         getResources().getDisplayMetrics().density));
-                textView.setOnClickListener(SearchActivity.this);
-                mActivitySearchBinding.layoutCategory.addView(textView);
+                textView.setOnClickListener(this);
+                mFragmentAdminHomeBinding.layoutCategory.addView(textView);
             }
         }
     }
 
-    private void searchMovie() {
-        MyApplication.get(this).getMovieDatabaseReference().addValueEventListener(new ValueEventListener() {
+    private void onClickAddMovie() {
+        GlobalFunction.startActivity(getActivity(), AddMovieActivity.class);
+    }
+
+    private void onClickEditMovie(Movie movie) {
+        Bundle bundle = new Bundle();
+        bundle.putSerializable(ConstantKey.KEY_INTENT_MOVIE_OBJECT, movie);
+        GlobalFunction.startActivity(getActivity(), AddMovieActivity.class, bundle);
+    }
+
+    private void deleteMovieItem(Movie movie) {
+        new AlertDialog.Builder(getActivity())
+                .setTitle(getString(R.string.msg_delete_title))
+                .setMessage(getString(R.string.msg_confirm_delete))
+                .setPositiveButton(getString(R.string.action_ok), (dialogInterface, i) -> {
+                    if (getActivity() == null) {
+                        return;
+                    }
+                    MyApplication.get(getActivity()).getMovieDatabaseReference()
+                            .child(String.valueOf(movie.getId())).removeValue((error, ref) ->
+                            Toast.makeText(getActivity(),
+                                    getString(R.string.msg_delete_movie_successfully), Toast.LENGTH_SHORT).show());
+                })
+                .setNegativeButton(getString(R.string.action_cancel), null)
+                .show();
+    }
+
+    public void searchMovie() {
+        if (getActivity() == null) {
+            return;
+        }
+        GlobalFunction.hideSoftKeyboard(getActivity());
+
+        MyApplication.get(getActivity()).getMovieDatabaseReference().addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (mListMovies != null) {
@@ -156,7 +193,7 @@ public class SearchActivity extends AppCompatActivity implements View.OnClickLis
                         mListMovies.add(0, movie);
                     }
                 }
-                displayListMoviesResult();
+                loadListMovie();
             }
 
             @Override
@@ -165,20 +202,40 @@ public class SearchActivity extends AppCompatActivity implements View.OnClickLis
         });
     }
 
-    private void displayListMoviesResult() {
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 3);
-        mActivitySearchBinding.rcvData.setLayoutManager(gridLayoutManager);
-        MovieAdapter movieAdapter = new MovieAdapter(mListMovies,
-                movie -> GlobalFunction.goToMovieDetail(this, movie));
-        mActivitySearchBinding.rcvData.setAdapter(movieAdapter);
+    private void loadListMovie() {
+        if (getActivity() == null) {
+            return;
+        }
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
+        mFragmentAdminHomeBinding.rcvMovie.setLayoutManager(linearLayoutManager);
+        mAdminMovieAdapter = new AdminMovieAdapter(getActivity(), mListMovies, new AdminMovieAdapter.IManagerMovieListener() {
+            @Override
+            public void editMovie(Movie movie) {
+                onClickEditMovie(movie);
+            }
+
+            @Override
+            public void deleteMovie(Movie movie) {
+                deleteMovieItem(movie);
+            }
+
+            @Override
+            public void clickItemMovie(Movie movie) {
+
+            }
+        });
+        mFragmentAdminHomeBinding.rcvMovie.setAdapter(mAdminMovieAdapter);
     }
 
     private boolean isMovieResult(Movie movie) {
         if (movie == null) {
             return false;
         }
-        String key = mActivitySearchBinding.edtKeyword.getText().toString().trim();
-        long categoryId = mCategorySelected.getId();
+        String key = mFragmentAdminHomeBinding.edtSearchName.getText().toString().trim();
+        long categoryId = 0;
+        if (mCategorySelected != null) {
+            categoryId = mCategorySelected.getId();
+        }
         if (StringUtil.isEmpty(key)) {
             if (categoryId == 0) {
                 return true;
@@ -189,6 +246,14 @@ public class SearchActivity extends AppCompatActivity implements View.OnClickLis
             if (categoryId == 0) {
                 return isMatch;
             } else return isMatch && movie.getCategoryId() == categoryId;
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (mAdminMovieAdapter != null) {
+            mAdminMovieAdapter.release();
         }
     }
 

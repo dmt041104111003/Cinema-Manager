@@ -1,8 +1,9 @@
 package com.example.cinemamanager.model;
 
-import java.io.Serializable;
+import com.google.gson.Gson;
 
-public class User implements Serializable {
+public class User {
+
     private String email;
     private String password;
     private boolean isAdmin;
@@ -37,5 +38,10 @@ public class User implements Serializable {
 
     public void setAdmin(boolean admin) {
         isAdmin = admin;
+    }
+
+    public String toJSon() {
+        Gson gson = new Gson();
+        return gson.toJson(this);
     }
 }
