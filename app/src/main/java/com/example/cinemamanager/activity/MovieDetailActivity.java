@@ -32,7 +32,6 @@ public class MovieDetailActivity extends AppCompatActivity {
 
     private ActivityMovieDetailBinding mActivityMovieDetailBinding;
     private Movie mMovie;
-
     private SimpleExoPlayer mPlayer;
 
     @Override
@@ -42,33 +41,41 @@ public class MovieDetailActivity extends AppCompatActivity {
         setContentView(mActivityMovieDetailBinding.getRoot());
 
         getDataIntent();
+        initListener();
     }
 
     private void getDataIntent() {
         Bundle bundle = getIntent().getExtras();
         if (bundle == null) {
+            Log.e("MovieDetailActivity", "No data received in intent");
             return;
         }
         Movie movie = (Movie) bundle.get(ConstantKey.KEY_INTENT_MOVIE_OBJECT);
+        if (movie == null) {
+            Log.e("MovieDetailActivity", "Movie object is null");
+            return;
+        }
         getMovieInformation(movie.getId());
     }
 
     private void getMovieInformation(long movieId) {
         MyApplication.get(this).getMovieDatabaseReference().child(String.valueOf(movieId))
                 .addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                mMovie = snapshot.getValue(Movie.class);
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        mMovie = snapshot.getValue(Movie.class);
+                        if (mMovie == null) {
+                            Log.e("MovieDetailActivity", "Movie data is null");
+                            return;
+                        }
+                        displayDataMovie();
+                    }
 
-                displayDataMovie();
-                initListener();
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.e("MovieDetailActivity", "Failed to fetch movie data: " + error.getMessage());
+                    }
+                });
     }
 
     private void displayDataMovie() {
@@ -84,7 +91,7 @@ public class MovieDetailActivity extends AppCompatActivity {
         mActivityMovieDetailBinding.tvDescriptionMovie.setText(mMovie.getDescription());
 
         if (!StringUtil.isEmpty(mMovie.getUrl())) {
-            Log.e("Movie Url", mMovie.getUrl());
+            Log.d("MovieDetailActivity", "Movie URL: " + mMovie.getUrl());
             initExoPlayer();
         }
     }
@@ -122,26 +129,32 @@ public class MovieDetailActivity extends AppCompatActivity {
     }
 
     private void initExoPlayer() {
-        PlayerView mExoPlayerView = mActivityMovieDetailBinding.exoplayer;
-
         if (mPlayer != null) {
             return;
         }
         mPlayer = new SimpleExoPlayer.Builder(this).build();
-        // Set player
+        PlayerView mExoPlayerView = mActivityMovieDetailBinding.exoplayer;
         mExoPlayerView.setPlayer(mPlayer);
         mExoPlayerView.hideController();
     }
 
     private void startVideo() {
+        if (mPlayer == null || mMovie == null || StringUtil.isEmpty(mMovie.getUrl())) {
+            return;
+        }
         mActivityMovieDetailBinding.imgPlayMovie.setVisibility(View.GONE);
+        MediaItem mediaItem = MediaItem.fromUri(mMovie.getUrl());
+        mPlayer.setMediaItem(mediaItem);
+        mPlayer.prepare();
+        mPlayer.setPlayWhenReady(true);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
         if (mPlayer != null) {
-            MediaItem mediaItem = MediaItem.fromUri(mMovie.getUrl());
-            mPlayer.addMediaItem(mediaItem);
-            // Prepare video source
-            mPlayer.prepare();
-            // Set play video
-            mPlayer.setPlayWhenReady(true);
+            mPlayer.release();
+            mPlayer = null;
         }
     }
 }
