@@ -116,22 +116,128 @@ public abstract class BaseActivity extends AppCompatActivity {
         });
     }
 
-        if (alertDialog != null && alertDialog.isShowing()) {
-            alertDialog.dismiss();
+    private void dismissAllDialogs() {
+        dismissProgressDialog();
+        dismissAlertDialog();
+    }
+
+    private void dismissAlertDialog() {
+        if (!isActivityActive) return;
+
+        runOnUiThread(() -> {
+            try {
+                if (alertDialog != null && alertDialog.isShowing()) {
+                    alertDialog.dismiss();
+                }
+                alertDialog = null;
+            } catch (Exception e) {
+                Log.e(TAG, "Error dismissing alert dialog", e);
+            }
+        });
+    }
+
+    protected void createAlertDialog() {
+        if (isActivityActive && !isFinishing()) {
+            alertDialog = new MaterialDialog.Builder(this)
+                    .title(R.string.app_name)
+                    .positiveText(R.string.ok)
+                    .cancelable(true)
+                    .canceledOnTouchOutside(true)
+                    .build();
         }
     }
 
-    public void createAlertDialog() {
-        alertDialog = new MaterialDialog.Builder(this)
-                .title(R.string.app_name)
-                .positiveText(R.string.action_ok)
-                .cancelable(false)
-                .build();
+    public void showMessage(@NonNull final String message) {
+        if (!isActivityActive) return;
+
+        runOnUiThread(() -> {
+            try {
+                if (alertDialog == null || alertDialog.isShowing()) {
+                    createAlertDialog();
+                }
+                if (alertDialog != null && !alertDialog.isShowing() && !isFinishing()) {
+                    alertDialog.setContent(message);
+                    alertDialog.show();
+                    startDialogTimeout();
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error showing alert dialog", e);
+                // Fallback to Toast if dialog fails
+                Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
-    public void showAlertDialog(String errorMessage) {
-        alertDialog.setContent(errorMessage);
-        alertDialog.show();
+    public void showConfirmDialog(@NonNull String message,
+                                 @NonNull String positiveText,
+                                 @NonNull String negativeText,
+                                 @Nullable MaterialDialog.SingleButtonCallback positiveCallback,
+                                 @Nullable MaterialDialog.SingleButtonCallback negativeCallback) {
+        if (!isActivityActive) return;
+
+        runOnUiThread(() -> {
+            try {
+                if (alertDialog != null && alertDialog.isShowing()) {
+                    alertDialog.dismiss();
+                }
+
+                alertDialog = new MaterialDialog.Builder(this)
+                        .title(R.string.app_name)
+                        .content(message)
+                        .positiveText(positiveText)
+                        .negativeText(negativeText)
+                        .cancelable(false)
+                        .onPositive((dialog, which) -> {
+                            if (positiveCallback != null) {
+                                positiveCallback.onClick(dialog, which);
+                            }
+                        })
+                        .onNegative((dialog, which) -> {
+                            if (negativeCallback != null) {
+                                negativeCallback.onClick(dialog, which);
+                            }
+                        })
+                        .build();
+
+                if (!isFinishing()) {
+                    alertDialog.show();
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error showing confirm dialog", e);
+                // Fallback to Toast if dialog fails
+                Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    public void showErrorDialog(@NonNull String message) {
+        if (!isActivityActive) return;
+
+        runOnUiThread(() -> {
+            try {
+                if (alertDialog != null && alertDialog.isShowing()) {
+                    alertDialog.dismiss();
+                }
+
+                alertDialog = new MaterialDialog.Builder(this)
+                        .title(R.string.error)
+                        .content(message)
+                        .positiveText(R.string.ok)
+                        .cancelable(true)
+                        .canceledOnTouchOutside(true)
+                        .positiveColor(getResources().getColor(R.color.red))
+                        .build();
+
+                if (!isFinishing()) {
+                    alertDialog.show();
+                    startDialogTimeout();
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error showing error dialog", e);
+                // Fallback to Toast if dialog fails
+                Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     public void showAlertDialog(@StringRes int resourceId) {
