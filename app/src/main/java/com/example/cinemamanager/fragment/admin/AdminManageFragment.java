@@ -1,5 +1,4 @@
 package com.example.cinemamanager.fragment.admin;
-
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
