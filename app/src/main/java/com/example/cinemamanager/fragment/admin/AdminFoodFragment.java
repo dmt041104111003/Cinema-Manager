@@ -17,12 +17,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.example.cinemamanager.MyApplication;
 import com.example.cinemamanager.R;
-import com.example.cinemamanager.activity.admin.AddCategoryActivity;
-import com.example.cinemamanager.adapter.admin.AdminCategoryAdapter;
+import com.example.cinemamanager.activity.admin.AddFoodActivity;
+import com.example.cinemamanager.adapter.admin.AdminFoodAdapter;
 import com.example.cinemamanager.constant.ConstantKey;
 import com.example.cinemamanager.constant.GlobalFunction;
-import com.example.cinemamanager.databinding.FragmentAdminCategoryBinding;
-import com.example.cinemamanager.model.Category;
+import com.example.cinemamanager.databinding.FragmentAdminFoodBinding;
+import com.example.cinemamanager.model.Food;
 import com.example.cinemamanager.util.StringUtil;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -31,35 +31,36 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AdminCategoryFragment extends Fragment {
+public class AdminFoodFragment extends Fragment {
 
-    private FragmentAdminCategoryBinding mFragmentAdminCategoryBinding;
-    private List<Category> mListCategory;
+    private FragmentAdminFoodBinding mFragmentAdminFoodBinding;
+    private List<Food> mListFood;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        mFragmentAdminCategoryBinding = FragmentAdminCategoryBinding.inflate(inflater, container, false);
+        mFragmentAdminFoodBinding = FragmentAdminFoodBinding.inflate(inflater, container, false);
 
+        getListFoods("");
         initListener();
-        getListCategory("");
-        return mFragmentAdminCategoryBinding.getRoot();
+
+        return mFragmentAdminFoodBinding.getRoot();
     }
 
     private void initListener() {
-        mFragmentAdminCategoryBinding.btnAddCategory.setOnClickListener(v -> onClickAddCategory());
+        mFragmentAdminFoodBinding.btnAddFood.setOnClickListener(v -> onClickAddFood());
 
-        mFragmentAdminCategoryBinding.imgSearch.setOnClickListener(view1 -> searchCategory());
+        mFragmentAdminFoodBinding.imgSearch.setOnClickListener(view1 -> searchFood());
 
-        mFragmentAdminCategoryBinding.edtSearchName.setOnEditorActionListener((v, actionId, event) -> {
+        mFragmentAdminFoodBinding.edtSearchName.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                searchCategory();
+                searchFood();
                 return true;
             }
             return false;
         });
 
-        mFragmentAdminCategoryBinding.edtSearchName.addTextChangedListener(new TextWatcher() {
+        mFragmentAdminFoodBinding.edtSearchName.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
@@ -72,29 +73,30 @@ public class AdminCategoryFragment extends Fragment {
             public void afterTextChanged(Editable s) {
                 String strKey = s.toString().trim();
                 if (strKey.equals("") || strKey.length() == 0) {
-                    getListCategory("");
+                    getListFoods("");
                 }
             }
         });
     }
 
-    private void searchCategory() {
-        String strKey = mFragmentAdminCategoryBinding.edtSearchName.getText().toString().trim();
-        getListCategory(strKey);
+    private void searchFood() {
+        String strKey = mFragmentAdminFoodBinding.edtSearchName.getText().toString().trim();
+        getListFoods(strKey);
         GlobalFunction.hideSoftKeyboard(getActivity());
     }
 
-    private void onClickAddCategory() {
-        GlobalFunction.startActivity(getActivity(), AddCategoryActivity.class);
+
+    private void onClickAddFood() {
+        GlobalFunction.startActivity(getActivity(), AddFoodActivity.class);
     }
 
-    private void onClickEditCategory(Category category) {
+    private void onClickEditFood(Food food) {
         Bundle bundle = new Bundle();
-        bundle.putSerializable(ConstantKey.KEY_INTENT_CATEGORY_OBJECT, category);
-        GlobalFunction.startActivity(getActivity(), AddCategoryActivity.class, bundle);
+        bundle.putSerializable(ConstantKey.KEY_INTENT_FOOD_OBJECT, food);
+        GlobalFunction.startActivity(getActivity(), AddFoodActivity.class, bundle);
     }
 
-    private void deleteCategoryItem(Category category) {
+    private void deleteFoodItem(Food food) {
         new AlertDialog.Builder(getActivity())
                 .setTitle(getString(R.string.msg_delete_title))
                 .setMessage(getString(R.string.msg_confirm_delete))
@@ -102,36 +104,37 @@ public class AdminCategoryFragment extends Fragment {
                     if (getActivity() == null) {
                         return;
                     }
-                    MyApplication.get(getActivity()).getCategoryDatabaseReference()
-                            .child(String.valueOf(category.getId())).removeValue((error, ref) ->
+                    MyApplication.get(getActivity()).getFoodDatabaseReference()
+                            .child(String.valueOf(food.getId())).removeValue((error, ref) ->
                             Toast.makeText(getActivity(),
-                                    getString(R.string.msg_delete_category_successfully), Toast.LENGTH_SHORT).show());
+                                    getString(R.string.msg_delete_food_successfully), Toast.LENGTH_SHORT).show());
                 })
                 .setNegativeButton(getString(R.string.action_cancel), null)
                 .show();
     }
 
-    public void getListCategory(String key) {
+    public void getListFoods(String key) {
         if (getActivity() == null) {
             return;
         }
-        MyApplication.get(getActivity()).getCategoryDatabaseReference().addValueEventListener(new ValueEventListener() {
+        MyApplication.get(getActivity()).getFoodDatabaseReference().addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (mListCategory != null) {
-                    mListCategory.clear();
+                if (mListFood != null) {
+                    mListFood.clear();
                 } else {
-                    mListCategory = new ArrayList<>();
+                    mListFood = new ArrayList<>();
                 }
+
                 for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-                    Category category = dataSnapshot.getValue(Category.class);
-                    if (category != null) {
+                    Food food = dataSnapshot.getValue(Food.class);
+                    if (food != null) {
                         if (StringUtil.isEmpty(key)) {
-                            mListCategory.add(0, category);
+                            mListFood.add(0, food);
                         } else {
-                            if (GlobalFunction.getTextSearch(category.getName()).toLowerCase().trim()
+                            if (GlobalFunction.getTextSearch(food.getName()).toLowerCase().trim()
                                     .contains(GlobalFunction.getTextSearch(key).toLowerCase().trim())) {
-                                mListCategory.add(0, category);
+                                mListFood.add(0, food);
                             }
                         }
                     }
@@ -150,20 +153,19 @@ public class AdminCategoryFragment extends Fragment {
             return;
         }
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
-        mFragmentAdminCategoryBinding.rcvCategory.setLayoutManager(linearLayoutManager);
+        mFragmentAdminFoodBinding.rcvFood.setLayoutManager(linearLayoutManager);
 
-        AdminCategoryAdapter adminCategoryAdapter = new AdminCategoryAdapter(mListCategory,
-                new AdminCategoryAdapter.IManagerCategoryListener() {
-                    @Override
-                    public void editCategory(Category category) {
-                        onClickEditCategory(category);
-                    }
+        AdminFoodAdapter adminFoodAdapter = new AdminFoodAdapter(mListFood, new AdminFoodAdapter.IManagerFoodListener() {
+            @Override
+            public void editFood(Food food) {
+                onClickEditFood(food);
+            }
 
-                    @Override
-                    public void deleteCategory(Category category) {
-                        deleteCategoryItem(category);
-                    }
-                });
-        mFragmentAdminCategoryBinding.rcvCategory.setAdapter(adminCategoryAdapter);
+            @Override
+            public void deleteFood(Food food) {
+                deleteFoodItem(food);
+            }
+        });
+        mFragmentAdminFoodBinding.rcvFood.setAdapter(adminFoodAdapter);
     }
 }

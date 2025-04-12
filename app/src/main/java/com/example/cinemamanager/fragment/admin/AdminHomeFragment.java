@@ -1,4 +1,4 @@
-package com.example.cinema.fragment.admin;
+package com.example.cinemamanager.fragment.admin;
 
 import android.app.AlertDialog;
 import android.os.Bundle;
@@ -16,16 +16,16 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.example.cinema.MyApplication;
-import com.example.cinema.R;
-import com.example.cinema.activity.admin.AddMovieActivity;
-import com.example.cinema.adapter.admin.AdminMovieAdapter;
-import com.example.cinema.constant.ConstantKey;
-import com.example.cinema.constant.GlobalFunction;
-import com.example.cinema.databinding.FragmentAdminHomeBinding;
-import com.example.cinema.model.Category;
-import com.example.cinema.model.Movie;
-import com.example.cinema.util.StringUtil;
+import com.example.cinemamanager.MyApplication;
+import com.example.cinemamanager.R;
+import com.example.cinemamanager.activity.admin.AddMovieActivity;
+import com.example.cinemamanager.adapter.admin.AdminMovieAdapter;
+import com.example.cinemamanager.constant.ConstantKey;
+import com.example.cinemamanager.constant.GlobalFunction;
+import com.example.cinemamanager.databinding.FragmentAdminHomeBinding;
+import com.example.cinemamanager.model.Category;
+import com.example.cinemamanager.model.Movie;
+import com.example.cinemamanager.util.StringUtil;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;

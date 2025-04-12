@@ -1,5 +1,4 @@
-package com.example.cinema.fragment.admin;
-
+package com.example.cinemamanager.fragment.admin;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,12 +8,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.example.cinema.activity.ChangePasswordActivity;
-import com.example.cinema.activity.SignInActivity;
-import com.example.cinema.activity.admin.AdminRevenueActivity;
-import com.example.cinema.constant.GlobalFunction;
-import com.example.cinema.databinding.FragmentAdminManageBinding;
-import com.example.cinema.prefs.DataStoreManager;
+import com.example.cinemamanager.activity.ChangePasswordActivity;
+import com.example.cinemamanager.activity.SignInActivity;
+import com.example.cinemamanager.activity.admin.AdminRevenueActivity;
+import com.example.cinemamanager.constant.GlobalFunction;
+import com.example.cinemamanager.databinding.FragmentAdminManageBinding;
+import com.example.cinemamanager.prefs.DataStoreManager;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class AdminManageFragment extends Fragment {
